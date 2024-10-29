@@ -1,5 +1,5 @@
 %% Load Data
-cd("H:\My Drive\School\MRacing\DDT")
+cd("C:\Users\askar\docs\MATLAB\mracing24_ddt\ddt_old")
 
 %% Initialize Figure
 close all
