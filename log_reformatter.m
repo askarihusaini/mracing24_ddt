@@ -1,3 +1,4 @@
+disp("Select log file to reformat")
 [file, location] = uigetfile('*.txt');
 
 if isequal(file, 0)
@@ -19,4 +20,8 @@ relevant_vars = strrep(relevant_vars, ' ', '');
 disp('Reformatting log data...')
 data = readtable([location, file]);
 dataClean = data(:,relevant_vars);
+
+disp("Writing to new file...")
+% create new fild with same name + ddt_
+writetable(data, strcat(location,"ddt_",file));
 disp('Finished')
