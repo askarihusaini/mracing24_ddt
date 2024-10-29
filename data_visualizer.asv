@@ -31,7 +31,7 @@ if answer == "Yes"
     
     disp("Writing to new file...")
     % create new file with same name + ddt_
-    file = strcat("ddt_", file);
-    writetable(data, strcat(location, file));
+    file = strcat("ddt_",file);
+    writetable(data, strcat(location,file));
     disp('Finished reformatting')
 end

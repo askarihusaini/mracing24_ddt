@@ -6,6 +6,8 @@ if isequal(file, 0)
     return
 end
 
+disp('Reformatting log data...')
+
 % These are the variables we want to keep in the reformatted file
 % Make sure 'variables_select' has no carriage returns (\r)!!!!
 relevant_vars = fileread('variables_relevant.txt');
@@ -17,11 +19,11 @@ relevant_vars = strrep(relevant_vars, ']', '_');
 relevant_vars = strrep(relevant_vars, '/', '_');
 relevant_vars = strrep(relevant_vars, ' ', '');
 
-disp('Reformatting log data...')
 data = readtable([location, file]);
-dataClean = data(:,relevant_vars);
-
+data = data(:,relevant_vars);
+    
 disp("Writing to new file...")
-% create new fild with same name + ddt_
-writetable(data, strcat(location,"ddt_",file));
-disp('Finished')
+% create new file with same name + ddt_
+file = strcat("ddt_", file);
+writetable(data, strcat(location, file));
+disp('Finished reformatting')
