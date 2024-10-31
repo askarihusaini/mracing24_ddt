@@ -8,25 +8,25 @@ if isequal(file, 0)
     return
 end
     
-disp('start')
-fid = fopen([location file]);
-numLines = 0;
-while ~feof(fid)
-    [~,c]=textscan(fid,'%*[^\r\n]%*[\r\n]',1,'Delimiter','','Whitespace','','EndOfLine','');
-    if c > 0 % if c==0, then there wasn't a line there. this may happen at the end of the file.
-        numLines = numLines + 1;
-    end
-end
-fclose(fid);
-disp(numLines)
+
+data = readtable([location, file]);
+
+                lap_times = data{:,"Dash_3_Lap_Time_s_"};
+                % Find smallest non-zero lap time
+                lapf_t = min(lap_times(lap_times>0));
+                if isempty(lapf_t)
+                    lapf_t = 0;
+                end
+                % Grab row of lapf_t and use it to find lapf number
+                lapf = data{lap_times==lapf_t, "Dash_3_Lap_Number_None_"}(1);
 
 
-% disp("start")
-% disp(height(readtable([location, file], 'ReadVariableNames', false)))
-
-% opts = detectImportOptions([location, file]);
-% opts.SelectedVariableNames = "Dash_3_Lap_Number_None_";
-% data1 = readtable([location, file], opts);
+% data = readtable([location, file]);
+% lap_min = data{1, "Dash_3_Lap_Number_None_"};
+% lap_max = data{end, "Dash_3_Lap_Number_None_"};
+% disp(lap_min)
+% disp(strcat(" Min lap: ", string(lap_min), ...
+%     " Map lap: ", string(lap_max)));
 
 %data = data(:,relevant_vars);
 % disp(data{1,"Dash_3_Lap_Number_None_"})
