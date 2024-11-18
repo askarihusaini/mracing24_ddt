@@ -10,6 +10,66 @@
 % 
 % data = readtable([location, file]);
 
+
+%% mine
+clear
+close all
+
+x = 0:.01:10;
+data = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10];
+%data = [sin(x); cos(x); tan(x); x/10; x.^2/10; (x.^3 - x)/10; 0.5; -x/10];
+
+axis_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+selected_vars = [1,2,3,4,5];
+NUM_VARS = size(selected_vars,2);
+
+% AXIS_LENGTH = 5;
+% AXIS_HEIGHT = 4;
+% BUFFER = 0.025;
+% PROP_WIDTH = 0.5;
+% axes = zeros(NUM_VARS);
+% for i = 1:NUM_VARS
+%     axes(selected_vars(i)) = plot(AXIS_LENGTH, AXIS_HEIGHT, (i-1)*AXIS_HEIGHT+1, ...
+%     'color', subplotColor, 'Position', [BUFFER, 1 - i * (1/NUM_VARS - BUFFER), PROP_WIDTH, .1]);
+%     %[BUFFER, 1 - i * (1/NUM_VARS - BUFFER), PROP_WIDTH, 1/NUM_VARS - BUFFER]
+%     xticks([]); % remove markings
+%     yticks([]);
+%     ylabel(strcat("Graph ", string(axis_names(selected_vars(i)))))
+% end
+
+figureColor = [0,0,0];
+set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w','w'})
+
+f1 = figure('color', figureColor);
+sgtitle("Lap Analysis (1)") 
+
+T = tiledlayout("flow", "TileSpacing", "compact", "Padding", "compact");
+nexttile(T)
+xticks([])
+yticks([])
+t1 = tiledlayout(T, "vertical", "TileSpacing", "none", "Padding", "compact");
+for i = 1:NUM_VARS
+    nexttile(t1)
+    plot(x, data(i,:), 'r')
+    set(gca,'Color', [.1, .1, .1])
+    xticks([])
+    yticks([])
+    ylabel("Var. " + axis_names(selected_vars(i)))
+end
+xticks()
+xlabel("time (s)")
+
+nexttile(T)
+plot(x, sin(x))
+
+% t2 = tiledlayout(T, "vertical", "TileSpacing", "compact", "Padding", "compact");
+% nexttile(t2)
+
+
+
+
+%% old
+
 clear
 close all
 warning('off','all')
@@ -23,49 +83,11 @@ f1 = figure('color', figureColor);
 sgtitle("Lap Analysis (1)")
 %set(f1, 'WindowButtonDownFcn', @MovingVerticalLine);
 
-%% mine
-
-x = 0:.01:10;
-data = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10];
-%data = [sin(x); cos(x); tan(x); x/10; x.^2/10; (x.^3 - x)/10; 0.5; -x/10];
-
-clear
-close all
-figureColor = [0,0,0];
-
-
-axis_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-selected_vars = [1,2,3,4,5];
-
-AXIS_LENGTH = 5;
-AXIS_HEIGHT = 4;
-BUFFER = 0.025;
-PROP_WIDTH = 0.5;
-NUM_VARS = size(selected_vars,2);
-axes = zeros(NUM_VARS);
-
-% for i = 1:NUM_VARS
-%     axes(selected_vars(i)) = plot(AXIS_LENGTH, AXIS_HEIGHT, (i-1)*AXIS_HEIGHT+1, ...
-%     'color', subplotColor, 'Position', [BUFFER, 1 - i * (1/NUM_VARS - BUFFER), PROP_WIDTH, .1]);
-%     %[BUFFER, 1 - i * (1/NUM_VARS - BUFFER), PROP_WIDTH, 1/NUM_VARS - BUFFER]
-%     xticks([]); % remove markings
-%     yticks([]);
-%     ylabel(strcat("Graph ", string(axis_names(selected_vars(i)))))
-% end
-
-tiledlayout("vertical")
-for i = 1:NUM_VARS
-    nexttile
-    plot(x, temp)
-end
-
-
-%% old
 axs_length = 5;
 axs_width = 4;
 axisHeight = 0.18;
 %axisPos = [1-axisHeight, 1-(2*(axisHeight-.001)), 1-(3*(axisHeight-.001)), 1-(4*(axisHeight-.001)), 1-(5*(axisHeight-0.001))] - 0.03;
-for i = i:5
+for i = 1:5
     axisPos(i) = 1-i*(0.2-0.03) - 0.03;
 end
 

@@ -15,20 +15,22 @@
 clear
 close all
 
-x = 0:.01:10;
+timei = 0;
+timef = 10;
+x = timei:.01:timef;
 data = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10];
 %data = [sin(x); cos(x); tan(x); x/10; x.^2/10; (x.^3 - x)/10; 0.5; -x/10];
 
 axis_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 selected_vars = [1,2,3,4,5];
-
-AXIS_LENGTH = 5;
-AXIS_HEIGHT = 4;
-BUFFER = 0.025;
-PROP_WIDTH = 0.5;
 NUM_VARS = size(selected_vars,2);
-axes = zeros(NUM_VARS);
 
+% Manual
+% AXIS_LENGTH = 5;
+% AXIS_HEIGHT = 4;
+% BUFFER = 0.025;
+% PROP_WIDTH = 0.5;
+% axes = zeros(NUM_VARS);
 % for i = 1:NUM_VARS
 %     axes(selected_vars(i)) = plot(AXIS_LENGTH, AXIS_HEIGHT, (i-1)*AXIS_HEIGHT+1, ...
 %     'color', subplotColor, 'Position', [BUFFER, 1 - i * (1/NUM_VARS - BUFFER), PROP_WIDTH, .1]);
@@ -44,15 +46,32 @@ set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w'
 f1 = figure('color', figureColor);
 sgtitle("Lap Analysis (1)") 
 
-t = tiledlayout("vertical", "TileSpacing", "none", "Padding", "compact");
+T = tiledlayout(1,3, "TileSpacing", "compact", "Padding", "compact");
+
+t1 = tiledlayout(T, "vertical", "TileSpacing", "none", "Padding", "compact");
+t1.Layout.Tile = 1;
+t1.Layout.TileSpan = [1,2];
 for i = 1:NUM_VARS
-    nexttile
+    nexttile(t1)
     plot(x, data(i,:), 'r')
     set(gca,'Color', [.1, .1, .1])
     xticks([])
     yticks([])
     ylabel("Var. " + axis_names(selected_vars(i)))
 end
+xticks();
+xlabel("time (s)")
+
+t2 = tiledlayout(T, 3,1, "TileSpacing", "compact", "Padding", "compact");
+t2.Layout.Tile = 3;
+
+% Map
+nexttile(t2, 1, [2,1])
+plot(x, sin(x))
+
+% Info readout
+nexttile(t2, 3, [1,1])
+plot(x, 1-x.^2)
 
 
 %% old
@@ -74,7 +93,7 @@ axs_length = 5;
 axs_width = 4;
 axisHeight = 0.18;
 %axisPos = [1-axisHeight, 1-(2*(axisHeight-.001)), 1-(3*(axisHeight-.001)), 1-(4*(axisHeight-.001)), 1-(5*(axisHeight-0.001))] - 0.03;
-for i = i:5
+for i = 1:5
     axisPos(i) = 1-i*(0.2-0.03) - 0.03;
 end
 
