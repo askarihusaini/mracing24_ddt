@@ -24,6 +24,7 @@ data = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10]
 axis_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 selected_vars = [1,2,3,4,5];
 NUM_VARS = size(selected_vars,2);
+plots = zeros(NUM_VARS);
 
 % Manual
 % AXIS_LENGTH = 5;
@@ -46,14 +47,17 @@ set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w'
 f1 = figure('color', figureColor);
 sgtitle("Lap Analysis (1)") 
 
+% Create tiled layout with three vertical sections
 T = tiledlayout(1,3, "TileSpacing", "compact", "Padding", "compact");
 
+% First subtile spans two vertical sections, with inner horizontal sections
 t1 = tiledlayout(T, "vertical", "TileSpacing", "none", "Padding", "compact");
 t1.Layout.Tile = 1;
 t1.Layout.TileSpan = [1,2];
+% Fill each inner horizontal section with a graph
 for i = 1:NUM_VARS
     nexttile(t1)
-    plot(x, data(i,:), 'r')
+    plots(i) = plot(x, data(i,:), 'r');
     set(gca,'Color', [.1, .1, .1])
     xticks([])
     yticks([])
@@ -62,16 +66,28 @@ end
 xticks();
 xlabel("time (s)")
 
-t2 = tiledlayout(T, 3,1, "TileSpacing", "compact", "Padding", "compact");
+% Second subtile spans the third vertical section, with five horizontal
+% sections
+t2 = tiledlayout(T, 5,1, "TileSpacing", "compact", "Padding", "compact");
 t2.Layout.Tile = 3;
 
-% Map
-nexttile(t2, 1, [2,1])
-plot(x, sin(x))
+% The info readout spans three of the inner horizontal sections
+nexttile(t2, 1, [3,1])
+text(0,0.1, sprintf( ...
+    "Time\nSpeed\nThrottle\netc..." ...
+    ), "Color", "w", "FontSize", 10)
 
-% Info readout
-nexttile(t2, 3, [1,1])
-plot(x, 1-x.^2)
+Ax = gca;
+Ax.Visible = 0; % Make current axis invisible (just display text)
+
+% infoBox_str = {['Time: ',num2str(0)], ['Speed: ', num2str(0)], ['Throttle: ', num2str(0)], ['Brake: ', num2str(0)], ['RPM: ', num2str(0)], ['GForce: ', num2str(0)]};
+% infoBox_dim = [.915 .375 .75 .2];
+% infoBox_color = [1 1 1];
+% infoBox = annotation(f1, 'textbox',infoBox_dim,'String',infoBox_str,'FitBoxToText','on', 'color', infoBox_color, 'edgecolor', infoBox_color, 'FontSize', 11);
+
+% The map spans the fourth and fifth horizontal section
+nexttile(t2, 4, [2,1])
+plot(x, sin(x))
 
 
 %% old
