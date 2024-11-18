@@ -10,14 +10,29 @@
 % 
 % data = readtable([location, file]);
 
-
-%% mine
 clear
 close all
+warning('off','all')
+
+figureColor = [0,0,0];
+subplotColor = [0.1,0.1,0.1];
+set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w','w'})
+
+%figure 1
+f1 = figure('color', figureColor);
+sgtitle("Lap Analysis (1)")
+%set(f1, 'WindowButtonDownFcn', @MovingVerticalLine);
+
+%% mine
 
 x = 0:.01:10;
 data = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10];
 %data = [sin(x); cos(x); tan(x); x/10; x.^2/10; (x.^3 - x)/10; 0.5; -x/10];
+
+clear
+close all
+figureColor = [0,0,0];
+
 
 axis_names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 selected_vars = [1,2,3,4,5];
@@ -38,38 +53,14 @@ axes = zeros(NUM_VARS);
 %     ylabel(strcat("Graph ", string(axis_names(selected_vars(i)))))
 % end
 
-figureColor = [0,0,0];
-set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w','w'})
-
-f1 = figure('color', figureColor);
-sgtitle("Lap Analysis (1)") 
-
-t = tiledlayout("vertical", "TileSpacing", "none", "Padding", "compact");
+tiledlayout("vertical")
 for i = 1:NUM_VARS
     nexttile
-    plot(x, data(i,:), 'r')
-    set(gca,'Color', [.1, .1, .1])
-    xticks([])
-    yticks([])
-    ylabel("Var. " + axis_names(selected_vars(i)))
+    plot(x, temp)
 end
 
 
 %% old
-
-clear
-close all
-warning('off','all')
-
-figureColor = [0,0,0];
-subplotColor = [0.1,0.1,0.1];
-set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w','w'})
-
-%figure 1
-f1 = figure('color', figureColor);
-sgtitle("Lap Analysis (1)")
-%set(f1, 'WindowButtonDownFcn', @MovingVerticalLine);
-
 axs_length = 5;
 axs_width = 4;
 axisHeight = 0.18;
