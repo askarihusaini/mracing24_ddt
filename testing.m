@@ -31,7 +31,6 @@ axes = zeros(NUM_VARS);
 figureColor = [0,0,0];
 set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{'w','w','w'})
 
-%f1 = figure('color', figureColor);
 f1 = uifigure('color', figureColor);
 
 % T Tiled layout
@@ -54,19 +53,17 @@ for i = 1:NUM_VARS
     ax.XTick = [];
     ax.YTick = [];
     ax.YLabel.String = axis_names(selected_vars(i));
-    % set(gca,'Color', [.1, .1, .1])
-    % xticks([])
-    % yticks([])
-    % ylabel(axis_names(selected_vars(i)))
 end
 ax.XTick = timei:timef;
 ax.XLabel.String = "time (s)";
-% xticks();
-% xlabel("time (s)")
 
 % t2 Tile 2: Tiled layout: Infobox and map
 t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
 t2.Layout.Tile = 3;
+
+% t_slider = uislider(f1,"range");
+% t_slider.Limits = [timei, timef];
+% t_selected = 0;
 
 % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
 ax = nexttile(t2, 1, [1,1]);
@@ -75,9 +72,6 @@ t2a = tiledlayout(t2, 1,2, "TileSpacing", "none", "Padding", "none");
 t2a.Layout.Tile = 1;
 
 % Subsubtile i & ii: Lap data of track 1 & 2
-select_t = 0;
-% t_slider = uislider(f1,"range");
-% t_slider.Limits = [timei, timef];
 for i = [1,2]
     ax = nexttile(t2a, i, [1,1]);
     ax.XTick = [];
@@ -85,14 +79,13 @@ for i = [1,2]
     ax.Color = [.1,.1,.1];
     ax.Box = "on";
 
-    infoBox_string = "Lap " + i + ":\n@ t = " + select_t + "\n";
+    infoBox_string = "Lap " + i + ":\n@ t = " + t_selected + "\n";
     infoBox_data = zeros(NUM_VARS);
     for j = 1:NUM_VARS
         infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + infoBox_data(j) + "\n";
     end
 
-    xlim(xlim+[-10,10]);ylim(ylim+[-10,10]); % use xlim and ylim to fix location  
-    text(ax, min(xlim)+1, max(ylim)-.1, sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+    text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
         "Color", "w", 'fontsize',8,'fontunits','normalized')
 
 end
