@@ -49,6 +49,8 @@ for i = 1:NUM_VARS
     curr(2) = plot(ax, x, data2(i,:), "Color", [0,0.5,1]);
     hold(ax, "off")
 
+    %curr.ButtonDownFcn = @(h,e) disp(e.IntersectionPoint);
+
     ax.Color = [.1,.1,.1];
     ax.XTick = [];
     ax.YTick = [];
@@ -61,9 +63,9 @@ ax.XLabel.String = "time (s)";
 t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
 t2.Layout.Tile = 3;
 
-% t_slider = uislider(f1,"range");
-% t_slider.Limits = [timei, timef];
-% t_selected = 0;
+t_slider = uislider(f1,"range");
+t_slider.Limits = [timei, timef];
+t_selected = get(t_slider, 'value'); % t from both ends of the slider range
 
 % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
 ax = nexttile(t2, 1, [1,1]);
@@ -79,7 +81,7 @@ for i = [1,2]
     ax.Color = [.1,.1,.1];
     ax.Box = "on";
 
-    infoBox_string = "Lap " + i + ":\n@ t = " + t_selected + "\n";
+    infoBox_string = "Lap " + i + ":\n@ t = " + t_selected(1) + "\n";
     infoBox_data = zeros(NUM_VARS);
     for j = 1:NUM_VARS
         infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + infoBox_data(j) + "\n";
