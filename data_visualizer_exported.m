@@ -138,6 +138,23 @@ classdef data_visualizer_exported < matlab.apps.AppBase
            
             %% Which variables to plot?
 
+            % Pedals_APS_A [percent]
+            % Pedals_APS_B [percent]
+            % Pedals_F_Brake [psi]
+            % Pedals_R_Brake [psi]
+            % AMK_ActVal_1_FL_AMK_ActualVelocity [rpm]
+            % AMK_ActVal_1_FR_AMK_ActualVelocity [rpm]
+            % AMK_ActVal_1_RL_AMK_ActualVelocity [rpm]
+            % AMK_ActVal_1_RR_AMK_ActualVelocity [rpm]
+            % Dash_3_Vehicle_Speed [mph]
+            % Dash_4_Brake_Bias [None]
+            % Average_IMU_Long [g]
+            % Average_IMU_Lat [g]
+            % Average_IMU_Vert [g]
+            % Average_IMU_Roll [deg/s]
+            % Average_IMU_Pitch [deg/s]
+            % Average_IMU_Yaw [deg/s]
+
             % Needs to be in same order as appears in log file
             axis_checkboxes = [ app.gas_pedal_check, app.brake_pedal_check, app.front_brakes_check, app.read_brakes_check, ...
                                 app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
