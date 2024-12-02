@@ -65,67 +65,67 @@ classdef data_visualizer_exported < matlab.apps.AppBase
         % Button pushed function: run_visualizer_button
         function run_visualizer(app, event)
             
-            % w = warning ('off','all');
-            % msg = msgbox("Please wait :)");
-            % 
-            % %% Reformat file
-            % if get(app.reformat_file_check, 'Value') == 1
-            %     % These are the variables we want to keep in the reformatted file
-            %     % Make sure 'variables_select' has no carriage returns (\r)!!!!
-            %     relevant_vars = fileread('variables_relevant.txt');
-            %     relevant_vars = strsplit(relevant_vars, '\n');
-            % 
-            %     % readtable replaces [ ] / with _ and removes whitespace
-            %     relevant_vars = strrep(relevant_vars, '[', '_');
-            %     relevant_vars = strrep(relevant_vars, ']', '_');
-            %     relevant_vars = strrep(relevant_vars, '/', '_');
-            %     relevant_vars = strrep(relevant_vars, ' ', '');
-            % 
-            %     app.data = readtable([app.location, app.file]);
-            %     app.data = app.data(:,relevant_vars);
-            % 
-            %     % create new file with same name + ddt_
-            %     app.file = strcat("ddt_", app.file);
-            %     writetable(app.data, strcat(app.location, app.file));
-            % else
-            %     app.data = readtable([app.location, app.file]);
-            % end
-            % 
-            % %% Grab min & max lap and user inputted laps
-            % app.lap_min = app.data{1, "Dash_3_Lap_Number_None_"};
-            % app.lap_max = app.data{end, "Dash_3_Lap_Number_None_"};
-            % app.lapA = app.lapA_edit.Value;
-            % app.lapB = app.lapB_edit.Value;
-            % 
-            % %% Calc fastest lap
-            % lap_times = app.data{:,"Dash_3_Lap_Time_s_"};
-            % % Find smallest non-zero lap time
-            % app.lapf_t = min(lap_times(lap_times>0));
-            % % Edge case: If lap time is always 0
-            % if isempty(app.lapf_t)
-            %     app.lapf_t = 0;
-            % end
-            % % Grab row of lapf_t and use it to find lapf number
-            % app.lapf = app.data{lap_times==app.lapf_t, "Dash_3_Lap_Number_None_"}(1);
-            % 
-            % %% Default lap A and B
-            % if (isempty(app.lapA))
-            %     app.lapA = app.lapf;
-            %     app.lapA_t = app.lapf_t;
-            % end
-            % if (isempty(app.lapB))
-            %     app.lapB = -1;
-            %     app.lapB_t = -1;
-            % end
-            % 
-            % % Error message if segmentation fault
-            % if (app.lapA < app.lap_min || app.lapA > app.lap_max || ...
-            %         (app.lapB < app.lap_min && app.lapB ~= -1) || app.lapB > app.lap_max)
-            %     msgbox(["Error: Lap number out of bounds", ...
-            %             "Lap number must be between " + app.lap_min + " and " + app.lap_max], ...
-            %             "Error: Segmentation Fault")
-            %     return
-            % end
+            w = warning ('off','all');
+            msg = msgbox("Please wait :)");
+
+            %% Reformat file
+            if get(app.reformat_file_check, 'Value') == 1
+                % These are the variables we want to keep in the reformatted file
+                % Make sure 'variables_select' has no carriage returns (\r)!!!!
+                relevant_vars = fileread('variables_relevant.txt');
+                relevant_vars = strsplit(relevant_vars, '\n');
+    
+                % readtable replaces [ ] / with _ and removes whitespace
+                relevant_vars = strrep(relevant_vars, '[', '_');
+                relevant_vars = strrep(relevant_vars, ']', '_');
+                relevant_vars = strrep(relevant_vars, '/', '_');
+                relevant_vars = strrep(relevant_vars, ' ', '');
+
+                app.data = readtable([app.location, app.file]);
+                app.data = app.data(:,relevant_vars);
+
+                % create new file with same name + ddt_
+                app.file = strcat("ddt_", app.file);
+                writetable(app.data, strcat(app.location, app.file));
+            else
+                app.data = readtable([app.location, app.file]);
+            end
+
+            %% Grab min & max lap and user inputted laps
+            app.lap_min = app.data{1, "Dash_3_Lap_Number_None_"};
+            app.lap_max = app.data{end, "Dash_3_Lap_Number_None_"};
+            app.lapA = app.lapA_edit.Value;
+            app.lapB = app.lapB_edit.Value;
+
+            %% Calc fastest lap
+            lap_times = app.data{:,"Dash_3_Lap_Time_s_"};
+            % Find smallest non-zero lap time
+            app.lapf_t = min(lap_times(lap_times>0));
+            % Edge case: If lap time is always 0
+            if isempty(app.lapf_t)
+                app.lapf_t = 0;
+            end
+            % Grab row of lapf_t and use it to find lapf number
+            app.lapf = app.data{lap_times==app.lapf_t, "Dash_3_Lap_Number_None_"}(1);
+
+            %% Default lap A and B
+            if (isempty(app.lapA))
+                app.lapA = app.lapf;
+                app.lapA_t = app.lapf_t;
+            end
+            if (isempty(app.lapB))
+                app.lapB = -1;
+                app.lapB_t = -1;
+            end
+
+            % Error message if segmentation fault
+            if (app.lapA < app.lap_min || app.lapA > app.lap_max || ...
+                    (app.lapB < app.lap_min && app.lapB ~= -1) || app.lapB > app.lap_max)
+                msgbox(["Error: Lap number out of bounds", ...
+                        "Lap number must be between " + app.lap_min + " and " + app.lap_max], ...
+                        "Error: Segmentation Fault")
+                return
+            end
            
             %% Which variables to plot?
             
@@ -151,7 +151,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                                 app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, app.avg_speed_check, ...
                                 app.vehicle_speed_check, app.vehichle_heading_check, app.roll_rate_check, app.pitch_rate_check, app.yaw_rate_check, ...
                                 app.long_gs_check, app.lat_gs_check, app.vert_gs_check];
-
+            
             axis_names = string(size(axis_checkboxes));
             axis_values = zeros(size(axis_checkboxes));
             for i = 1:size(axis_checkboxes, 2)
@@ -162,11 +162,14 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                     axis_values(i) = 1;
                 end
             end
+            disp(axis_names);
+            disp(axis_values);
 
-            selected_vars = 1:size(axis_checkboxes, 2);
-            selected_vars = transpose(nonzeros(selected_vars .* axis_values));
+            
+            disp("BREAK")
 
             %% Plot!
+            delete(msg)
 
             % timei = 0;
             % timef = 10;
