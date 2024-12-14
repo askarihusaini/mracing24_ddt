@@ -165,9 +165,9 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             axis_names = string(size(axis_checkboxes));
             axis_values = zeros(size(axis_checkboxes));
             for i = 1:size(axis_checkboxes, 2)
-                text = convertCharsToStrings(get(axis_checkboxes(i), 'Text')); % HOLY SHIT THIS IS FUNNY LMFAOOOOO
+                txt = convertCharsToStrings(get(axis_checkboxes(i), 'Text')); % HOLY SHIT THIS IS FUNNY LMFAOOOOO
                 value = get(axis_checkboxes(i), 'Value');
-                axis_names(i) = text;
+                axis_names(i) = txt;
                 if value
                     axis_values(i) = 1;
                 end
@@ -259,8 +259,8 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                     infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + infoBox_data(j) + "\n";
                 end
             
-                % text(0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
-                %     "Color", "w", 'fontsize',8,'fontunits','normalized')
+                text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+                    "Color", "w", 'fontsize',5,'fontunits','normalized')
             end
             
             % Subtile B: Map
@@ -391,7 +391,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
             app.version_label.Position = [375 670 85 30];
-            app.version_label.Text = {'Askari Husaini'; 'V24.12.2'};
+            app.version_label.Text = {'Askari Husaini'; 'V24.12.14'};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
