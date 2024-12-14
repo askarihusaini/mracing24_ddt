@@ -63,9 +63,10 @@ ax.XLabel.String = "time (s)";
 t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
 t2.Layout.Tile = 3;
 
-t_slider = uislider(f1,"range");
-t_slider.Limits = [timei, timef];
-t_selected = get(t_slider, 'value'); % t from both ends of the slider range
+% t_slider = uislider(f1,"range");
+% t_slider.Limits = [timei, timef];
+% t_selected = get(t_slider, 'value'); % t from both ends of the slider range
+t_selected = 0;
 
 % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
 ax = nexttile(t2, 1, [1,1]);

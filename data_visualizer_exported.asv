@@ -176,10 +176,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             selected_vars = 1:size(axis_checkboxes, 2);
             selected_vars = transpose(nonzeros(selected_vars .* axis_values));
             NUM_VARS = size(selected_vars,2);
-
-            selected_data = data_checkbox(:, selected_vars);
-            selected_data = selected_data{:,:}';
-            time = data{:,"xtime_s_"};
+            data1 = data_checkbox(:, selected_vars);
 
 
             %% Plot!
@@ -194,7 +191,8 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             % selected_vars = [1,2,3,4,5,6,7,8];
 
             delete(msg)
-      
+
+            time = data{:,"xtime_s_"};            
             axes = zeros(NUM_VARS);
 
             figureColor = [0,0,0];
@@ -214,7 +212,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                 ax = nexttile(t1);
                 curr = axes(i);
                 hold(ax, "on")
-                curr(1) = plot(ax, time, selected_data(i,:), "Color", [1,0,0]);
+                curr(1) = plot(ax, time, data_checkbox(selected_vars(i),:), "Color", [1,0,0]);
                 %curr(2) = plot(ax, time, data2(i,:), "Color", [0,0.5,1]);
                 hold(ax, "off")
                 %% 
@@ -223,11 +221,10 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             
                 ax.Color = [.1,.1,.1];
                 ax.XTick = [];
-                %ax.YTick = [];
+                ax.YTick = [];
                 ax.YLabel.String = axis_names(selected_vars(i));
             end
-            % ax.XTick = time(1):10:time(end);
-            ax.XTick = 0:25:time(end);
+            ax.XTick = timei:timef;
             ax.XLabel.String = "time (s)";
             
             % t2 Tile 2: Tiled layout: Infobox and map
@@ -237,7 +234,6 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             % t_slider = uislider(f1,"range");
             % t_slider.Limits = [timei, timef];
             % t_selected = get(t_slider, 'value'); % t from both ends of the slider range
-            t_selected = 0;
             
             % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
             ax = nexttile(t2, 1, [1,1]);
@@ -253,14 +249,15 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                 ax.Color = [.1,.1,.1];
                 ax.Box = "on";
             
-                infoBox_string = "Lap " + i + ":\n@ t = " + t_selected(1) + "\n";
+                infoBox_string = "Lap " + i + ":\n@ t = " + 0 + "\n";
                 infoBox_data = zeros(NUM_VARS);
                 for j = 1:NUM_VARS
                     infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + infoBox_data(j) + "\n";
                 end
             
-                % text(0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
-                %     "Color", "w", 'fontsize',8,'fontunits','normalized')
+                text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+                    "Color", "w", 'fontsize',8,'fontunits','normalized')
+            
             end
             
             % Subtile B: Map
