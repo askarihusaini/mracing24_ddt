@@ -245,12 +245,11 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                 ax.YMinorGrid = "on";
                 ax.Color = tileColor;
                 ax.XTick = 0:25:indep_var(end);
-                xticklabels(ax, "");
+                xticklabels("");
                 ax.YLabel.String = axis_names(selected_vars(i));
 
                 plot_axes(i) = ax;
             end
-            xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XLabel.String = indep_var_txt;
 
             linkaxes(plot_axes, 'x')
@@ -293,7 +292,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             long_g = data_checkbox{:, "Average_IMU_Long_g_"};
             throttle_pos = data_checkbox{:, "Pedals_APS_A_percent_"};
 
-            scatter(ax, lat_g, long_g, 20, throttle_pos, "Marker",".")
+            scatter(ax, lat_g, long_g, 10, throttle_pos, "Marker",".")
             ax.XGrid = "on";
             ax.YGrid = "on";
             ax.XMinorGrid = "on";
