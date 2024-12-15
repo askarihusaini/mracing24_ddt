@@ -32,7 +32,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
         LapBLabel               matlab.ui.control.Label
         lapA_edit               matlab.ui.control.NumericEditField
         Lap1Label               matlab.ui.control.Label
-        title                   matlab.ui.control.Label
+        MainHeader                   matlab.ui.control.Label
         mracing_logo            matlab.ui.control.Image
         upload_log_button       matlab.ui.control.Button
         reformat_file_check     matlab.ui.control.CheckBox
@@ -301,7 +301,9 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             ax.XDir = 'reverse';
             ax.Color = tileColor;
             ax.Box = "on";
-            cb = colorbar(ax);
+
+            title(ax, "G-G Diagram");
+            colorbar(ax);
             
 
         end
@@ -377,14 +379,14 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             app.mracing_logo.Position = [20 620 300 80];
             app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'app_resources', 'mracing_logo.png');
 
-            % Create title
-            app.title = uilabel(app.MRacing2024DataVisualizerUIFigure);
-            app.title.FontName = 'Century Gothic';
-            app.title.FontSize = 18;
-            app.title.FontWeight = 'bold';
-            app.title.FontColor = [0 0.149 0.302];
-            app.title.Position = [20 590 305 24];
-            app.title.Text = 'DRIVER DATA VISUALIZATION TOOL';
+            % Create MainHeader
+            app.MainHeader = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.MainHeader.FontName = 'Century Gothic';
+            app.MainHeader.FontSize = 18;
+            app.MainHeader.FontWeight = 'bold';
+            app.MainHeader.FontColor = [0 0.149 0.302];
+            app.MainHeader.Position = [20 590 305 24];
+            app.MainHeader.Text = 'DRIVER DATA VISUALIZATION TOOL';
 
             % Create Lap1Label
             app.Lap1Label = uilabel(app.MRacing2024DataVisualizerUIFigure);
