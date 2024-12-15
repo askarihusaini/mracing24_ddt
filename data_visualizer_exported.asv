@@ -4,7 +4,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
     properties (Access = public)
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         plot_wrt_group          matlab.ui.container.ButtonGroup
-        distance_button          matlab.ui.control.ToggleButton
+        distance_button         matlab.ui.control.ToggleButton
         time_button             matlab.ui.control.ToggleButton
         vert_gs_check           matlab.ui.control.CheckBox
         lat_gs_check            matlab.ui.control.CheckBox
@@ -22,8 +22,8 @@ classdef data_visualizer_exported < matlab.apps.AppBase
         brake_bias_check        matlab.ui.control.CheckBox
         read_brakes_check       matlab.ui.control.CheckBox
         front_brakes_check      matlab.ui.control.CheckBox
-        brake_pedal_check       matlab.ui.control.CheckBox
-        gas_pedal_check         matlab.ui.control.CheckBox
+        brake_position_check    matlab.ui.control.CheckBox
+        throttle_position_check     matlab.ui.control.CheckBox
         github_link             matlab.ui.control.Hyperlink
         variables_header        matlab.ui.control.Label
         log_file_header         matlab.ui.control.Label
@@ -32,7 +32,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
         LapBLabel               matlab.ui.control.Label
         lapA_edit               matlab.ui.control.NumericEditField
         Lap1Label               matlab.ui.control.Label
-        title                   matlab.ui.control.Label
+        MainHeader                   matlab.ui.control.Label
         mracing_logo            matlab.ui.control.Image
         upload_log_button       matlab.ui.control.Button
         reformat_file_check     matlab.ui.control.CheckBox
@@ -46,14 +46,14 @@ classdef data_visualizer_exported < matlab.apps.AppBase
         file = ""
         location = ""
 
-        lap_min % Smallest lap number (should be 0?)
-        lap_max % Biggest lap number
-        lapA % Lap 1 number
-        lapA_t % Lap 1 time
-        lapB % Lap 2 number
-        lapB_t % Lap 2 time
-        lapf % Fast lap number
-        lapf_t % Fast lap time
+        % lap_min % Smallest lap number (should be 0?)
+        % lap_max % Biggest lap number
+        % lapA % Lap 1 number
+        % lapA_t % Lap 1 time
+        % lapB % Lap 2 number
+        % lapB_t % Lap 2 time
+        % lapf % Fast lap number
+        % lapf_t % Fast lap time
 
     end
     
@@ -108,37 +108,39 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             data_checkbox = data(:, checkbox_vars);
 
             %% Grab min & max lap and user inputted laps
-            app.lap_min = data{1, "Dash_3_Lap_Number_None_"};
-            app.lap_max = data{end, "Dash_3_Lap_Number_None_"};
-            app.lapA = app.lapA_edit.Value;
-            app.lapB = app.lapB_edit.Value;
+            lap_min = data{1, "Dash_3_Lap_Number_None_"};
+            lap_max = data{end, "Dash_3_Lap_Number_None_"};
+            lapA = app.lapA_edit.Value;
+            lapB = app.lapB_edit.Value;
 
-            %% Calc fastest lap
-            lap_times = data{:,"Dash_3_Lap_Time_s_"};
-            % Find smallest non-zero lap time
-            app.lapf_t = min(lap_times(lap_times>0));
-            % Edge case: If lap time is always 0
-            if isempty(app.lapf_t)
-                app.lapf_t = 0;
-            end
-            % Grab row of lapf_t and use it to find lapf number
-            app.lapf = data{lap_times==app.lapf_t, "Dash_3_Lap_Number_None_"}(1);
+            % %% Calc fastest lap
+            % lap_times = data{:,"Dash_3_Lap_Time_s_"};
+            % % Find smallest non-zero lap time
+            % lapf_t = min(lap_times(lap_times>0));
+            % % Edge case: If lap time is always 0
+            % if isempty(lapf_t)
+            %     lapf_t = 0;
+            % end
+            % % Grab row of lapf_t and use it to find lapf number
+            % lapf = data{lap_times==lapf_t, "Dash_3_Lap_Number_None_"}(1);
 
             %% Default lap A and B
-            if (isempty(app.lapA))
-                app.lapA = app.lapf;
-                app.lapA_t = app.lapf_t;
+            if (isempty(lapA))
+                % lapA = lapf;
+                % lapA_t = lapf_t;
+                lapA = false;
+                lapA_time = false;
             end
-            if (isempty(app.lapB))
-                app.lapB = -1;
-                app.lapB_t = -1;
+            if (isempty(lapB))
+                lapB = false;
+                lapB_time = false;
             end
 
             % Error message if segmentation fault
-            if (app.lapA < app.lap_min || app.lapA > app.lap_max || ...
-                    (app.lapB < app.lap_min && app.lapB ~= -1) || app.lapB > app.lap_max)
+            if (lapA < lap_min || lapA > lap_max || ...
+                    (lapB < lap_min && lapB ~= -1) || lapB > lap_max)
                 msgbox(["Error: Lap number out of bounds", ...
-                        "Lap number must be between " + app.lap_min + " and " + app.lap_max], ...
+                        "Lap number must be between " + lap_min + " and " + lap_max], ...
                         "Error: Segmentation Fault")
                 return
             end
@@ -163,7 +165,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             % Average_IMU_Yaw [deg/s]
 
             % Needs to be in same order as appears in log file
-            axis_checkboxes = [ app.gas_pedal_check, app.brake_pedal_check, app.front_brakes_check, app.read_brakes_check, ...
+            axis_checkboxes = [ app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
                                 app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
                                 app.vehicle_speed_check, app.brake_bias_check, ...
                                 app.long_gs_check, app.lat_gs_check, app.vert_gs_check, ...
@@ -184,19 +186,45 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             selected_vars = transpose(nonzeros(selected_vars .* axis_values));
             NUM_VARS = size(selected_vars,2);
 
-            selected_data = data_checkbox(:, selected_vars);
-            selected_data = selected_data{:,:}';
-
-            % Are we plotting w.r.t time or distance?
             wrt_time = get(app.time_button, "Value");
-            if wrt_time
-                indep_var = data{:,"xtime_s_"};
-                indep_var_txt = "time (s)";
-            else
-                indep_var = data{:,"xdist_m_"};
-                indep_var_txt = "dist (m)";
-            end
 
+            if lapA == false
+                % Grab data across all laps
+                if wrt_time
+                    indep_var = data{:,"xtime_s_"};
+                else
+                    indep_var = data{:,"xdist_m_"};
+                end
+                selected_data = data_checkbox{:, selected_vars}';
+
+            else
+                % Grab data specific to only laps specified
+                lapA_data = data(data.Dash_3_Lap_Number_None_ == lapA, :);
+                if lapB
+                    lapB_data = data(data.Dash_3_Lap_Number_None_ == lapB, :);
+                end
+    
+                % Grab time/distance of lapA and lapB data for domain input
+                if wrt_time
+                    lapA_x = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
+                    if lapB
+                        lapB_x = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
+                    end
+                else
+                    lapA_x = lapB_data{:,"xdist_m_"} - lapA_data{1,"xdist_s_"};
+                    if lapB
+                        lapB_x = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_s_"};
+                    end
+                end
+    
+                % Grab checkbox variables of lapA and lapB data for range input
+                lapA_data_checkbox = lapA_data(:, checkbox_vars);
+                lapA_selected_data = lapA_data_checkbox{:, selected_vars}';
+                if lapB
+                    lapB_data_checkbox = lapB_data(:, checkbox_vars);
+                    lapB_selected_data = lapB_data_checkbox{:, selected_vars}';
+                end
+            end
 
             %% Plot!
 
@@ -208,14 +236,12 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             % axis_names = ["Var A", "Var B", "Var C", "Var D", "Var E", "Var F", "Var G", "Var H"];
             % selected_vars = [1,2,3,4,5,6,7,8];
 
-            delete(msg)
-
             figureColor = [.94,.94,.94];
             tileColor = [.9,.9,.9];
             textColor = [0,0,0];
             outlineColor = [0,0,0];
-            lapAColor = [0, .41, .8]; %[0, .15, .3]; % navy blue
-            lapBColor = [1, .8, .02]; %[1, .8, .02]; % maize
+            lapAColor = [0, .41, .8];
+            lapBColor = [.84, .15, .24];
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
             f1 = uifigure('color', figureColor);
@@ -227,14 +253,21 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             t1 = tiledlayout(T, "vertical", "TileSpacing", "compact", "Padding", "compact");
             t1.Layout.Tile = 1;
             t1.Layout.TileSpan = [1,2];
+
+            plot_axes = zeros([1, NUM_VARS]);
             % Subtiles: Individual graphs of variables
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
                 hold(ax, "on")
-                plot(ax, indep_var, selected_data(i,:), "Color", lapAColor);
+                plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor);
+                if lapB
+                    plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
+                end
+                
                 %curr(1) = ...
                 %curr(2) = plot(ax, indep_var, data2(i,:), "Color", lapBColor);
                 %axes(i) = curr
+
                 hold(ax, "off")
             
                 %curr.ButtonDownFcn = @(h,e) disp(e.IntersectionPoint);
@@ -244,13 +277,19 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                 ax.XMinorGrid = "on";
                 ax.YMinorGrid = "on";
                 ax.Color = tileColor;
-                ax.XTick = 0:25:indep_var(end);
-                xticklabels("");
+                %ax.XTick = 0:25:indep_var(end);
+                xticklabels(ax, "");
                 ax.YLabel.String = axis_names(selected_vars(i));
 
                 plot_axes(i) = ax;
             end
-            ax.XLabel.String = indep_var_txt;
+            xticklabels(ax, "auto"); % Enable tick labels for bottom graph
+            ax.XTickLabelRotation = 45;
+            if wrt_time
+                ax.XLabel.String = "time (s)";
+            else
+                ax.XLabel.String = "distance (m)";
+            end
 
             linkaxes(plot_axes, 'x')
             
@@ -292,7 +331,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             long_g = data_checkbox{:, "Average_IMU_Long_g_"};
             throttle_pos = data_checkbox{:, "Pedals_APS_A_percent_"};
 
-            scatter(ax, lat_g, long_g, 10, throttle_pos, "Marker",".")
+            scatter(ax, lat_g, long_g, 20, throttle_pos, "Marker",".")
             ax.XGrid = "on";
             ax.YGrid = "on";
             ax.XMinorGrid = "on";
@@ -300,9 +339,12 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             ax.XDir = 'reverse';
             ax.Color = tileColor;
             ax.Box = "on";
-            cb = colorbar(ax);
+
+            title(ax, "G-G Diagram");
+            colorbar(ax);
             
 
+            delete(msg)
         end
 
         % Button pushed function: upload_log_button
@@ -376,14 +418,14 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             app.mracing_logo.Position = [20 620 300 80];
             app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'app_resources', 'mracing_logo.png');
 
-            % Create title
-            app.title = uilabel(app.MRacing2024DataVisualizerUIFigure);
-            app.title.FontName = 'Century Gothic';
-            app.title.FontSize = 18;
-            app.title.FontWeight = 'bold';
-            app.title.FontColor = [0 0.149 0.302];
-            app.title.Position = [20 590 305 24];
-            app.title.Text = 'DRIVER DATA VISUALIZATION TOOL';
+            % Create MainHeader
+            app.MainHeader = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.MainHeader.FontName = 'Century Gothic';
+            app.MainHeader.FontSize = 18;
+            app.MainHeader.FontWeight = 'bold';
+            app.MainHeader.FontColor = [0 0.149 0.302];
+            app.MainHeader.Position = [20 590 305 24];
+            app.MainHeader.Text = 'DRIVER DATA VISUALIZATION TOOL';
 
             % Create Lap1Label
             app.Lap1Label = uilabel(app.MRacing2024DataVisualizerUIFigure);
@@ -453,17 +495,17 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             app.github_link.Position = [386 649 74 22];
             app.github_link.Text = 'Github repo';
 
-            % Create gas_pedal_check
-            app.gas_pedal_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.gas_pedal_check.Text = 'Gas Pedal (%)';
-            app.gas_pedal_check.FontSize = 10;
-            app.gas_pedal_check.Position = [25 380 87 22];
+            % Create throttle_position_check
+            app.throttle_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.throttle_position_check.Text = 'Throttle Position (%)';
+            app.throttle_position_check.FontSize = 10;
+            app.throttle_position_check.Position = [25 380 150 22];
 
-            % Create brake_pedal_check
-            app.brake_pedal_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.brake_pedal_check.Text = 'Brake Pedal (%)';
-            app.brake_pedal_check.FontSize = 10;
-            app.brake_pedal_check.Position = [25 359 95 22];
+            % Create brake_position_check
+            app.brake_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.brake_position_check.Text = 'Brake Position (%)';
+            app.brake_position_check.FontSize = 10;
+            app.brake_position_check.Position = [25 359 150 22];
 
             % Create front_brakes_check
             app.front_brakes_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
