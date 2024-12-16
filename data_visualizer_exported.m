@@ -373,7 +373,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
 
             % Create MRacing2024DataVisualizerUIFigure and hide until all components are created
             app.MRacing2024DataVisualizerUIFigure = uifigure('Visible', 'off');
-            app.MRacing2024WDataVisualizerUIFigure.Position = [100 100 480 720];
+            app.MRacing2024DataVisualizerUIFigure.Position = [100 100 480 720];
             app.MRacing2024DataVisualizerUIFigure.Name = 'MRacing 2024 Data Visualizer';
 
             % Create Image
