@@ -211,7 +211,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
                         lapB_x = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
                     end
                 else
-                    lapA_x = lapB_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
+                    lapA_x = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
                     if lapB
                         lapB_x = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
                     end
@@ -373,7 +373,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
 
             % Create MRacing2024DataVisualizerUIFigure and hide until all components are created
             app.MRacing2024DataVisualizerUIFigure = uifigure('Visible', 'off');
-            app.MRacing2024DataVisualizerUIFigure.Position = [100 100 480 720];
+            app.MRacing2024WDataVisualizerUIFigure.Position = [100 100 480 720];
             app.MRacing2024DataVisualizerUIFigure.Name = 'MRacing 2024 Data Visualizer';
 
             % Create Image
@@ -464,7 +464,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
             app.version_label.Position = [375 670 85 30];
-            app.version_label.Text = {'Askari Husaini'; 'V24.12.15'};
+            app.version_label.Text = {'Askari Husaini'; 'V24.12.16'};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
