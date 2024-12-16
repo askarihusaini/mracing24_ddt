@@ -1,4 +1,4 @@
-classdef data_visualizer_exported < matlab.apps.AppBase
+classdef data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
@@ -627,7 +627,7 @@ classdef data_visualizer_exported < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = data_visualizer_exported
+        function app = data_visualizer
 
             % Create UIFigure and components
             createComponents(app)
