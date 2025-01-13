@@ -234,7 +234,13 @@ classdef data_visualizer < matlab.apps.AppBase
             if plot_variances && ~lapB
                 delete(msg)
                 msgbox("Error: Input a second lap to display variance", ...
-                        "Error: Invalid Lap B")
+                        "Error: Variance Conflict")
+                return
+            end
+            if plot_variances && ~wrt_time
+                delete(msg)
+                msgbox("Error: Variance display only works when plotting w.r.t time", ...
+                        "Error: Variance Conflict")
                 return
             end
 

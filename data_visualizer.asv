@@ -237,6 +237,11 @@ classdef data_visualizer < matlab.apps.AppBase
                         "Error: Invalid Lap B")
                 return
             end
+            if plot_variances && ~wrt_time
+                delete(msg)
+                msgbox("Error: Variance display only works when plotting w.r.t time", ...
+                        "Error: Variance Conflict")
+            end
 
             % Make both data ranges the same size
             if lapA_x(end) > lapB_x(end)
@@ -515,8 +520,8 @@ classdef data_visualizer < matlab.apps.AppBase
             app.version_label.HorizontalAlignment = 'right';
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
-            app.version_label.Position = [375 656 85 44];
-            app.version_label.Text = {xxxxxxxx"Askari Husaini"; "v1.0.0"; "dev-25.01.13"};
+            app.version_label.Position = [350 656 110 44];
+            app.version_label.Text = {'Askari Husaini'; 'v0.1.0+'; 'build-25.01.13'};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
