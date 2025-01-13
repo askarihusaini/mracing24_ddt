@@ -3,6 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
+        variance_check             matlab.ui.control.CheckBox
         plot_wrt_group          matlab.ui.container.ButtonGroup
         distance_button         matlab.ui.control.ToggleButton
         time_button             matlab.ui.control.ToggleButton
@@ -139,6 +140,7 @@ classdef data_visualizer < matlab.apps.AppBase
             % Error message if segmentation fault
             if (lapA < lap_min || lapA > lap_max || ...
                     (lapB < lap_min && lapB ~= -1) || lapB > lap_max)
+                delete(msg)
                 msgbox(["Error: Lap number out of bounds", ...
                         "Lap number must be between " + lap_min + " and " + lap_max], ...
                         "Error: Segmentation Fault")
@@ -224,11 +226,31 @@ classdef data_visualizer < matlab.apps.AppBase
                     lapB_data_checkbox = lapB_data(:, checkbox_vars);
                     lapB_selected_data = lapB_data_checkbox{:, selected_vars}';
                 end
+
             end
 
-            %% TODO!!!!!! Get lap comparison working with distances
-            % Issue is something with lap distances seg faulting when
-            % indexing through the lap data which makes sense ig (?)
+            %% Variance
+            plot_variances = get(app.variance_check, "Value");
+            if plot_variances && ~lapB
+                delete(msg)
+                msgbox("Error: Input a second lap to display variance", ...
+                        "Error: Invalid Lap B")
+                return
+            end
+
+            % Make both data ranges the same size
+            if lapA_x(end) > lapB_x(end)
+                variance_x = lapA_x;
+            else
+                variance_x = lapB_x;
+            end
+            resize_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
+            resized_lapA = resize(lapA_selected_data, [NUM_VARS, resize_size], Pattern="edge"); % Is edge the best??? Or 0???
+            resized_lapB = resize(lapB_selected_data, [NUM_VARS, resize_size], Pattern="edge");
+            variance_selected_data = resized_lapB - resized_lapA;
+
+            % May be smart to have a separate matrix for the variance
+            % values to make stuff easier for infobox and whatnot?
 
             %% Plot!
 
@@ -244,8 +266,10 @@ classdef data_visualizer < matlab.apps.AppBase
             tileColor = [.9,.9,.9];
             textColor = [0,0,0];
             outlineColor = [0,0,0];
-            lapAColor = [0, .49, .96];
-            lapBColor = [.89, .09, .04];
+            lapAColor = [235/255, 52/255, 52/255]; %[0, .49, .96];
+            lapBColor = [52/255, 128/255, 235/255]; %[.89, .09, .04];
+            varianceColor = [128/255, 52/255, 235/255];
+            ylineColor = [.5,.5,.5];
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
             f1 = uifigure('color', figureColor);
@@ -259,6 +283,10 @@ classdef data_visualizer < matlab.apps.AppBase
             t1.Layout.TileSpan = [1,2];
 
             plot_axes = zeros([1, NUM_VARS]);
+            if plot_variances
+                variance_axes = zeros([1, NUM_VARS]);
+            end
+            
             % Subtiles: Individual graphs of variables
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
@@ -268,6 +296,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
                 end
                 hold(ax, "off")
+                yline(ax, 0, "Color", ylineColor);
             
                 %curr.ButtonDownFcn = @(h,e) disp(e.IntersectionPoint);
         
@@ -281,6 +310,25 @@ classdef data_visualizer < matlab.apps.AppBase
                 ax.YLabel.String = axis_names(selected_vars(i));
 
                 plot_axes(i) = ax;
+
+                if plot_variances
+                    ax = nexttile(t1);
+                    
+                    plot(ax, variance_x, variance_selected_data(i,:), "Color", varianceColor);
+                    yline(ax, 0, "Color", ylineColor);
+
+                    ax.XGrid = "on";
+                    ax.YGrid = "on";
+                    ax.XMinorGrid = "on";
+                    ax.YMinorGrid = "on";
+                    ax.Color = tileColor;
+                    %ax.XTick = 0:25:indep_var(end);
+                    xticklabels(ax, "");
+                    ax.YLabel.String = "Variance";
+
+                    variance_axes(i) = ax;
+                end
+
             end
             xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XTickLabelRotation = 45;
@@ -290,7 +338,11 @@ classdef data_visualizer < matlab.apps.AppBase
                 ax.XLabel.String = "distance (m)";
             end
 
-            linkaxes(plot_axes, 'x')
+            if plot_variances
+                linkaxes([plot_axes, variance_axes], 'x')
+            else
+                linkaxes(plot_axes, 'x')
+            end
             
             % t2 Tile 2: Tiled layout: Infobox and map
             t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
@@ -463,8 +515,8 @@ classdef data_visualizer < matlab.apps.AppBase
             app.version_label.HorizontalAlignment = 'right';
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
-            app.version_label.Position = [375 670 85 30];
-            app.version_label.Text = {'Askari Husaini'; 'V24.12.16'};
+            app.version_label.Position = [350 656 110 44];
+            app.version_label.Text = {'Askari Husaini'; 'v0.1.0+'; 'build-25.01.13'};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
@@ -491,7 +543,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.github_link.FontName = 'Century Gothic';
             app.github_link.FontColor = [0.502 0.502 0.502];
             app.github_link.URL = 'https://github.com/askarihusaini/mracing24_ddt';
-            app.github_link.Position = [386 649 74 22];
+            app.github_link.Position = [386 635 74 22];
             app.github_link.Text = 'Github repo';
 
             % Create throttle_position_check
@@ -617,6 +669,11 @@ classdef data_visualizer < matlab.apps.AppBase
             app.distance_button = uitogglebutton(app.plot_wrt_group);
             app.distance_button.Text = 'distance';
             app.distance_button.Position = [11 10 100 23];
+
+            % Create variance_check
+            app.variance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.variance_check.Text = 'Lap Variance Graphs';
+            app.variance_check.Position = [25 85 135 22];            
 
             % Show the figure after all components are created
             app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
