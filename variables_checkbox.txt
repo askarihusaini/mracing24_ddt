@@ -1,3 +1,5 @@
+xtime [s]
+xdist [m]
 Pedals_APS_A [percent]
 Pedals_APS_B [percent]
 Pedals_F_Brake [psi]

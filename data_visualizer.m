@@ -3,43 +3,45 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
-        variance_check             matlab.ui.control.CheckBox
-        plot_wrt_group          matlab.ui.container.ButtonGroup
-        distance_button         matlab.ui.control.ToggleButton
-        time_button             matlab.ui.control.ToggleButton
-        vert_gs_check           matlab.ui.control.CheckBox
-        lat_gs_check            matlab.ui.control.CheckBox
-        long_gs_check           matlab.ui.control.CheckBox
-        yaw_rate_check          matlab.ui.control.CheckBox
-        pitch_rate_check        matlab.ui.control.CheckBox
-        roll_rate_check         matlab.ui.control.CheckBox
-        vehichle_heading_check  matlab.ui.control.CheckBox
-        vehicle_speed_check     matlab.ui.control.CheckBox
-        avg_speed_check         matlab.ui.control.CheckBox
-        rr_speed_check          matlab.ui.control.CheckBox
-        rl_speed_check          matlab.ui.control.CheckBox
-        fr_speed_check          matlab.ui.control.CheckBox
-        fl_speed_check          matlab.ui.control.CheckBox
-        brake_bias_check        matlab.ui.control.CheckBox
-        read_brakes_check       matlab.ui.control.CheckBox
-        front_brakes_check      matlab.ui.control.CheckBox
-        brake_position_check    matlab.ui.control.CheckBox
-        throttle_position_check     matlab.ui.control.CheckBox
-        github_link             matlab.ui.control.Hyperlink
-        variables_header        matlab.ui.control.Label
-        log_file_header         matlab.ui.control.Label
-        version_label           matlab.ui.control.Label
-        lapB_edit               matlab.ui.control.NumericEditField
-        LapBLabel               matlab.ui.control.Label
-        lapA_edit               matlab.ui.control.NumericEditField
-        Lap1Label               matlab.ui.control.Label
-        MainHeader                   matlab.ui.control.Label
-        mracing_logo            matlab.ui.control.Image
-        upload_log_button       matlab.ui.control.Button
-        reformat_file_check     matlab.ui.control.CheckBox
-        file_label              matlab.ui.control.Label
-        run_visualizer_button   matlab.ui.control.Button
-        Image                   matlab.ui.control.Image
+        time_check               matlab.ui.control.CheckBox
+        distance_check           matlab.ui.control.CheckBox
+        variance_check           matlab.ui.control.CheckBox
+        plot_wrt_group           matlab.ui.container.ButtonGroup
+        distance_button          matlab.ui.control.ToggleButton
+        time_button              matlab.ui.control.ToggleButton
+        vert_gs_check            matlab.ui.control.CheckBox
+        lat_gs_check             matlab.ui.control.CheckBox
+        long_gs_check            matlab.ui.control.CheckBox
+        yaw_rate_check           matlab.ui.control.CheckBox
+        pitch_rate_check         matlab.ui.control.CheckBox
+        roll_rate_check          matlab.ui.control.CheckBox
+        vehichle_heading_check   matlab.ui.control.CheckBox
+        vehicle_speed_check      matlab.ui.control.CheckBox
+        avg_speed_check          matlab.ui.control.CheckBox
+        rr_speed_check           matlab.ui.control.CheckBox
+        rl_speed_check           matlab.ui.control.CheckBox
+        fr_speed_check           matlab.ui.control.CheckBox
+        fl_speed_check           matlab.ui.control.CheckBox
+        brake_bias_check         matlab.ui.control.CheckBox
+        read_brakes_check        matlab.ui.control.CheckBox
+        front_brakes_check       matlab.ui.control.CheckBox
+        brake_position_check     matlab.ui.control.CheckBox
+        throttle_position_check  matlab.ui.control.CheckBox
+        github_link              matlab.ui.control.Hyperlink
+        variables_header         matlab.ui.control.Label
+        log_file_header          matlab.ui.control.Label
+        version_label            matlab.ui.control.Label
+        lapB_edit                matlab.ui.control.NumericEditField
+        LapBLabel                matlab.ui.control.Label
+        lapA_edit                matlab.ui.control.NumericEditField
+        Lap1Label                matlab.ui.control.Label
+        ddvt_header              matlab.ui.control.Label
+        mracing_logo             matlab.ui.control.Image
+        upload_log_button        matlab.ui.control.Button
+        reformat_file_check      matlab.ui.control.CheckBox
+        file_label               matlab.ui.control.Label
+        run_visualizer_button    matlab.ui.control.Button
+        Image                    matlab.ui.control.Image
     end
 
     
@@ -148,7 +150,8 @@ classdef data_visualizer < matlab.apps.AppBase
             end
            
             %% Which variables to plot?
-
+            % xtime [s]
+            % xdist [m]
             % Pedals_APS_A [percent]
             % Pedals_APS_B [percent]
             % Pedals_F_Brake [psi]
@@ -167,7 +170,8 @@ classdef data_visualizer < matlab.apps.AppBase
             % Average_IMU_Yaw [deg/s]
 
             % Needs to be in same order as appears in log file
-            axis_checkboxes = [ app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
+            axis_checkboxes = [ app.time_check, app.distance_check, ... 
+                                app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
                                 app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
                                 app.vehicle_speed_check, app.brake_bias_check, ...
                                 app.long_gs_check, app.lat_gs_check, app.vert_gs_check, ...
@@ -205,7 +209,7 @@ classdef data_visualizer < matlab.apps.AppBase
                 if lapB
                     lapB_data = data(data.Dash_3_Lap_Number_None_ == lapB, :);
                 end
-    
+
                 % Grab time/distance of lapA and lapB data for domain input
                 if wrt_time
                     lapA_x = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
@@ -245,15 +249,17 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             % Make both data ranges the same size
-            if lapA_x(end) > lapB_x(end)
-                variance_x = lapA_x;
-            else
-                variance_x = lapB_x;
+            if plot_variances
+                if lapA_x(end) > lapB_x(end)
+                    variance_x = lapA_x;
+                else
+                    variance_x = lapB_x;
+                end
+                resize_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
+                resized_lapA = resize(lapA_selected_data, [NUM_VARS, resize_size], Pattern="edge"); % Is edge the best??? Or 0???
+                resized_lapB = resize(lapB_selected_data, [NUM_VARS, resize_size], Pattern="edge");
+                variance_selected_data = resized_lapB - resized_lapA;
             end
-            resize_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
-            resized_lapA = resize(lapA_selected_data, [NUM_VARS, resize_size], Pattern="edge"); % Is edge the best??? Or 0???
-            resized_lapB = resize(lapB_selected_data, [NUM_VARS, resize_size], Pattern="edge");
-            variance_selected_data = resized_lapB - resized_lapA;
 
             % May be smart to have a separate matrix for the variance
             % values to make stuff easier for infobox and whatnot?
@@ -475,14 +481,14 @@ classdef data_visualizer < matlab.apps.AppBase
             app.mracing_logo.Position = [20 620 300 80];
             app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'app_resources', 'mracing_logo.png');
 
-            % Create MainHeader
-            app.MainHeader = uilabel(app.MRacing2024DataVisualizerUIFigure);
-            app.MainHeader.FontName = 'Century Gothic';
-            app.MainHeader.FontSize = 18;
-            app.MainHeader.FontWeight = 'bold';
-            app.MainHeader.FontColor = [0 0.149 0.302];
-            app.MainHeader.Position = [20 590 305 24];
-            app.MainHeader.Text = 'DRIVER DATA VISUALIZATION TOOL';
+            % Create ddvt_header
+            app.ddvt_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.ddvt_header.FontName = 'Century Gothic';
+            app.ddvt_header.FontSize = 18;
+            app.ddvt_header.FontWeight = 'bold';
+            app.ddvt_header.FontColor = [0 0.149 0.302];
+            app.ddvt_header.Position = [20 590 305 24];
+            app.ddvt_header.Text = 'DRIVER DATA VISUALIZATION TOOL';
 
             % Create Lap1Label
             app.Lap1Label = uilabel(app.MRacing2024DataVisualizerUIFigure);
@@ -496,7 +502,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.lapA_edit.RoundFractionalValues = 'on';
             app.lapA_edit.AllowEmpty = 'on';
             app.lapA_edit.FontSize = 10;
-            app.lapA_edit.Placeholder = 'Default all laps';
+            app.lapA_edit.Placeholder = 'Default all';
             app.lapA_edit.Position = [170 507 80 21];
             app.lapA_edit.Value = [];
 
@@ -521,8 +527,8 @@ classdef data_visualizer < matlab.apps.AppBase
             app.version_label.HorizontalAlignment = 'right';
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
-            app.version_label.Position = [350 656 110 44];
-            app.version_label.Text = {'Askari Husaini'; 'v0.1.0+'; 'build-25.01.13'};
+            app.version_label.Position = [375 656 85 44];
+            app.version_label.Text = {'Askari Husaini'; 'v0.1.0+'; 'dev-25.01.13'};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
@@ -556,13 +562,13 @@ classdef data_visualizer < matlab.apps.AppBase
             app.throttle_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
             app.throttle_position_check.Text = 'Throttle Position (%)';
             app.throttle_position_check.FontSize = 10;
-            app.throttle_position_check.Position = [25 380 150 22];
+            app.throttle_position_check.Position = [25 380 113 22];
 
             % Create brake_position_check
             app.brake_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
             app.brake_position_check.Text = 'Brake Position (%)';
             app.brake_position_check.FontSize = 10;
-            app.brake_position_check.Position = [25 359 150 22];
+            app.brake_position_check.Position = [25 359 105 22];
 
             % Create front_brakes_check
             app.front_brakes_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
@@ -606,11 +612,11 @@ classdef data_visualizer < matlab.apps.AppBase
             app.rr_speed_check.FontSize = 10;
             app.rr_speed_check.Position = [180 317 117 22];
 
-            % % Create avg_speed_check
-            % app.avg_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            % app.avg_speed_check.Text = 'Average Tyre Speed (rpm)';
-            % app.avg_speed_check.FontSize = 10;
-            % app.avg_speed_check.Position = [180 296 139 22];
+            % Create avg_speed_check
+            app.avg_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.avg_speed_check.Text = 'Average Tyre Speed (rpm)';
+            app.avg_speed_check.FontSize = 10;
+            app.avg_speed_check.Position = [180 296 139 22];
 
             % Create vehicle_speed_check
             app.vehicle_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
@@ -620,7 +626,7 @@ classdef data_visualizer < matlab.apps.AppBase
 
             % Create vehichle_heading_check
             app.vehichle_heading_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.vehichle_heading_check.Text = '! TODO: Heading (deg)';
+            app.vehichle_heading_check.Text = 'Vehichle Heading (deg)';
             app.vehichle_heading_check.FontSize = 10;
             app.vehichle_heading_check.Position = [335 359 126 22];
 
@@ -628,19 +634,19 @@ classdef data_visualizer < matlab.apps.AppBase
             app.roll_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
             app.roll_rate_check.Text = 'Roll Rate (deg/s)';
             app.roll_rate_check.FontSize = 10;
-            app.roll_rate_check.Position = [335 338 97 22];
+            app.roll_rate_check.Position = [180 265 97 22];
 
             % Create pitch_rate_check
             app.pitch_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
             app.pitch_rate_check.Text = 'Pitch Rate (deg/s)';
             app.pitch_rate_check.FontSize = 10;
-            app.pitch_rate_check.Position = [335 317 102 22];
+            app.pitch_rate_check.Position = [180 244 102 22];
 
             % Create yaw_rate_check
             app.yaw_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
             app.yaw_rate_check.Text = 'Yaw Rate (deg/s)';
             app.yaw_rate_check.FontSize = 10;
-            app.yaw_rate_check.Position = [335 296 99 22];
+            app.yaw_rate_check.Position = [180 223 99 22];
 
             % Create long_gs_check
             app.long_gs_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
@@ -678,8 +684,20 @@ classdef data_visualizer < matlab.apps.AppBase
 
             % Create variance_check
             app.variance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.variance_check.Text = 'Lap Variance Graphs';
-            app.variance_check.Position = [25 85 135 22];            
+            app.variance_check.Text = 'Variance Graphs';
+            app.variance_check.Position = [25 85 111 22];
+
+            % Create distance_check
+            app.distance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.distance_check.Text = 'Distance (m)';
+            app.distance_check.FontSize = 10;
+            app.distance_check.Position = [335 338 79 22];
+
+            % Create time_check
+            app.time_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.time_check.Text = 'Time (s)';
+            app.time_check.FontSize = 10;
+            app.time_check.Position = [335 317 58 22];
 
             % Show the figure after all components are created
             app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
