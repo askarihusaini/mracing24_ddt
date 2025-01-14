@@ -2,6 +2,9 @@ classdef data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
+        PUBLIC_VER = 'v0.1.0+';
+        PRIVATE_VER = 'dev-25.01.14';
+        
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
         distance_check           matlab.ui.control.CheckBox
@@ -528,7 +531,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
             app.version_label.Position = [375 656 85 44];
-            app.version_label.Text = {'Askari Husaini'; 'v0.1.0+'; 'dev-25.01.13'};
+            app.version_label.Text = {'Askari Husaini'; app.PUBLIC_VER; app.PRIVATE_VER};
 
             % Create log_file_header
             app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
