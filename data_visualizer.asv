@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v0.1.0+';
-        PRIVATE_VER = 'dev-25.01.14.2';
+        PRIVATE_VER = 'dev-25.01.14';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -213,26 +213,16 @@ classdef data_visualizer < matlab.apps.AppBase
                     lapB_data = data(data.Dash_3_Lap_Number_None_ == lapB, :);
                 end
 
-                lapA_data{:,"xtime_s_"} = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
-                if lapB
-                    lapB_data{:,"xtime_s_"} = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
-                end
-
-                lapA_data{:,"xdist_m_"} = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
-                if lapB
-                    lapB_data{:,"xdist_m_"} = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
-                end
-
                 % Grab time/distance of lapA and lapB data for domain input
                 if wrt_time
-                    lapA_x = lapA_data{:,"xtime_s_"};
+                    lapA_x = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
                     if lapB
-                        lapB_x = lapB_data{:,"xtime_s_"};
+                        lapB_x = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
                     end
                 else
-                    lapA_x = lapA_data{:,"xdist_m_"};
+                    lapA_x = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
                     if lapB
-                        lapB_x = lapB_data{:,"xdist_m_"};
+                        lapB_x = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
                     end
                 end
     
@@ -351,10 +341,6 @@ classdef data_visualizer < matlab.apps.AppBase
                     xticklabels(ax, "");
                     ax.YLabel.String = "Variance";
 
-                    YL = get(ax, 'YLim');
-                    maxlim = max(abs(YL));
-                    set(ax, 'YLim', [-maxlim maxlim]);
-
                     variance_axes(i) = ax;
                 end
 
@@ -362,9 +348,9 @@ classdef data_visualizer < matlab.apps.AppBase
             xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XTickLabelRotation = 45;
             if wrt_time
-                ax.XLabel.String = "Time (s)";
+                ax.XLabel.String = "time (s)";
             else
-                ax.XLabel.String = "Distance (m)";
+                ax.XLabel.String = "distance (m)";
             end
 
             if plot_variances
@@ -706,15 +692,15 @@ classdef data_visualizer < matlab.apps.AppBase
 
             % Create distance_check
             app.distance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.distance_check.Text = 'Lap Distance (m)';
+            app.distance_check.Text = 'Distance (m)';
             app.distance_check.FontSize = 10;
-            app.distance_check.Position = [335 338 100 22];
+            app.distance_check.Position = [335 338 79 22];
 
             % Create time_check
             app.time_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.time_check.Text = 'Lap Time (s)';
+            app.time_check.Text = 'Time (s)';
             app.time_check.FontSize = 10;
-            app.time_check.Position = [335 317 100 22];
+            app.time_check.Position = [335 317 58 22];
 
             % Show the figure after all components are created
             app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
