@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v0.1.0+';
-        PRIVATE_VER = 'dev-25.01.14';
+        PRIVATE_VER = 'dev-25.01.14.2';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -51,16 +51,9 @@ classdef data_visualizer < matlab.apps.AppBase
     properties (Access = private)
         file = ""
         location = ""
-
-        % lap_min % Smallest lap number (should be 0?)
-        % lap_max % Biggest lap number
-        % lapA % Lap 1 number
-        % lapA_t % Lap 1 time
-        % lapB % Lap 2 number
-        % lapB_t % Lap 2 time
-        % lapf % Fast lap number
-        % lapf_t % Fast lap time
-
+        vlines
+        infoBox_data
+        infoBox_text
     end
     
 
@@ -119,27 +112,12 @@ classdef data_visualizer < matlab.apps.AppBase
             lapA = app.lapA_edit.Value;
             lapB = app.lapB_edit.Value;
 
-            % %% Calc fastest lap
-            % lap_times = data{:,"Dash_3_Lap_Time_s_"};
-            % % Find smallest non-zero lap time
-            % lapf_t = min(lap_times(lap_times>0));
-            % % Edge case: If lap time is always 0
-            % if isempty(lapf_t)
-            %     lapf_t = 0;
-            % end
-            % % Grab row of lapf_t and use it to find lapf number
-            % lapf = data{lap_times==lapf_t, "Dash_3_Lap_Number_None_"}(1);
-
             %% Default lap A and B
             if (isempty(lapA))
-                % lapA = lapf;
-                % lapA_t = lapf_t;
                 lapA = false;
-                lapA_time = false;
             end
             if (isempty(lapB))
                 lapB = false;
-                lapB_time = false;
             end
 
             % Error message if segmentation fault
@@ -197,6 +175,8 @@ classdef data_visualizer < matlab.apps.AppBase
 
             wrt_time = get(app.time_button, "Value");
 
+            lapB_x = 0;
+            lapB_selected_data = 0;
             if lapA == false
                 % Grab data across all laps
                 if wrt_time
@@ -213,22 +193,33 @@ classdef data_visualizer < matlab.apps.AppBase
                     lapB_data = data(data.Dash_3_Lap_Number_None_ == lapB, :);
                 end
 
+                lapA_data{:,"xtime_s_"} = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
+                if lapB
+                    lapB_data{:,"xtime_s_"} = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
+                end
+
+                lapA_data{:,"xdist_m_"} = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
+                if lapB
+                    lapB_data{:,"xdist_m_"} = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
+                end
+
                 % Grab time/distance of lapA and lapB data for domain input
                 if wrt_time
-                    lapA_x = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
+                    lapA_x = lapA_data{:,"xtime_s_"};
                     if lapB
-                        lapB_x = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
+                        lapB_x = lapB_data{:,"xtime_s_"};
                     end
                 else
-                    lapA_x = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
+                    lapA_x = lapA_data{:,"xdist_m_"};
                     if lapB
-                        lapB_x = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
+                        lapB_x = lapB_data{:,"xdist_m_"};
                     end
                 end
     
                 % Grab checkbox variables of lapA and lapB data for range input
                 lapA_data_checkbox = lapA_data(:, checkbox_vars);
                 lapA_selected_data = lapA_data_checkbox{:, selected_vars}';
+
                 if lapB
                     lapB_data_checkbox = lapB_data(:, checkbox_vars);
                     lapB_selected_data = lapB_data_checkbox{:, selected_vars}';
@@ -252,20 +243,21 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             % Make both data ranges the same size
-            if plot_variances
-                if lapA_x(end) > lapB_x(end)
-                    variance_x = lapA_x;
-                else
-                    variance_x = lapB_x;
-                end
-                resize_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
-                resized_lapA = resize(lapA_selected_data, [NUM_VARS, resize_size], Pattern="edge"); % Is edge the best??? Or 0???
-                resized_lapB = resize(lapB_selected_data, [NUM_VARS, resize_size], Pattern="edge");
-                variance_selected_data = resized_lapB - resized_lapA;
+            if size(lapA_x,1) > size(lapB_x,1)
+                max_x = lapA_x;
+            else
+                max_x = lapB_x;
             end
+            if plot_variances
 
-            % May be smart to have a separate matrix for the variance
-            % values to make stuff easier for infobox and whatnot?
+                variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
+                variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
+                variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
+
+                % TODO: Issue is that it isnt even a function lmao so its
+                % not as easy as just subtracting both things because like
+                % which value of x do we subtract it from lmao
+            end
 
             %% Plot!
 
@@ -296,40 +288,40 @@ classdef data_visualizer < matlab.apps.AppBase
             t1 = tiledlayout(T, "vertical", "TileSpacing", "compact", "Padding", "compact");
             t1.Layout.Tile = 1;
             t1.Layout.TileSpan = [1,2];
-
-            plot_axes = zeros([1, NUM_VARS]);
-            if plot_variances
-                variance_axes = zeros([1, NUM_VARS]);
-            end
             
             % Subtiles: Individual graphs of variables
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
-                hold(ax, "on")
-                plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor);
+                hold(ax, "on");
+                p1 = plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor);
                 if lapB
-                    plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
+                    p2 = plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
                 end
-                hold(ax, "off")
+                hold(ax, "off");
                 yline(ax, 0, "Color", ylineColor);
             
-                %curr.ButtonDownFcn = @(h,e) disp(e.IntersectionPoint);
-        
+                % Configure HitTest and PickableParts
+                p1.HitTest = "off";
+                if lapB
+                    p2.HitTest = "off";
+                end
+                ax.PickableParts = "all";
+                ax.HitTest = "on";
+            
                 ax.XGrid = "on";
                 ax.YGrid = "on";
                 ax.XMinorGrid = "on";
                 ax.YMinorGrid = "on";
                 ax.Color = tileColor;
-                %ax.XTick = 0:25:indep_var(end);
                 xticklabels(ax, "");
                 ax.YLabel.String = axis_names(selected_vars(i));
-
+            
                 plot_axes(i) = ax;
 
                 if plot_variances
                     ax = nexttile(t1);
                     
-                    plot(ax, variance_x, variance_selected_data(i,:), "Color", varianceColor);
+                    plot(ax, max_x, variance_lapB(i,:) - variance_lapA(i,:), "Color", varianceColor);
                     yline(ax, 0, "Color", ylineColor);
 
                     ax.XGrid = "on";
@@ -337,9 +329,12 @@ classdef data_visualizer < matlab.apps.AppBase
                     ax.XMinorGrid = "on";
                     ax.YMinorGrid = "on";
                     ax.Color = tileColor;
-                    %ax.XTick = 0:25:indep_var(end);
                     xticklabels(ax, "");
                     ax.YLabel.String = "Variance";
+
+                    YL = get(ax, 'YLim');
+                    maxlim = max(abs(YL));
+                    set(ax, 'YLim', [-maxlim maxlim]);
 
                     variance_axes(i) = ax;
                 end
@@ -348,9 +343,9 @@ classdef data_visualizer < matlab.apps.AppBase
             xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XTickLabelRotation = 45;
             if wrt_time
-                ax.XLabel.String = "time (s)";
+                ax.XLabel.String = "Time (s)";
             else
-                ax.XLabel.String = "distance (m)";
+                ax.XLabel.String = "Distance (m)";
             end
 
             if plot_variances
@@ -358,12 +353,15 @@ classdef data_visualizer < matlab.apps.AppBase
             else
                 linkaxes(plot_axes, 'x')
             end
+
+            for i = 1:NUM_VARS
+                ax = plot_axes(i);
+                ax.ButtonDownFcn = @(src, event) handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
+            end
             
             % t2 Tile 2: Tiled layout: Infobox and map
             t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
             t2.Layout.Tile = 3;
-            
-            x_selected = 0;
             
             % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
             ax = nexttile(t2, 1, [1,1]);
@@ -379,15 +377,14 @@ classdef data_visualizer < matlab.apps.AppBase
                 ax.Color = tileColor;
                 ax.Box = "on";
             
-                infoBox_string = "Lap " + i + ":\n@ t = " + x_selected(1) + "\n";
-                infoBox_data = zeros(NUM_VARS);
+                app.infoBox_data = zeros(2,NUM_VARS);
+                infoBox_string = "Lap " + i + ":\n@ t = " + 0 + "\n";
                 for j = 1:NUM_VARS
-                    infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + infoBox_data(j) + "\n";
+                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
                 end
-            
                 infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
-                text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
-                    "Color", textColor, 'fontsize',5,'fontunits','normalized')
+                app.infoBox_text(i) = text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+                    "Color", textColor, 'fontsize',5,'fontunits','normalized');
             end
             
             % Subtile B: GG Diagram
@@ -411,6 +408,51 @@ classdef data_visualizer < matlab.apps.AppBase
             
 
             delete(msg)
+        end
+
+        % hmmm
+       function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+            % Get the click location
+            clickPosition = event.IntersectionPoint;
+            clickedX = clickPosition(1); % X-coordinate of the click
+
+            disp(['x = ', num2str(clickedX)])
+            [~, idx] = min(abs(max_x - clickedX));
+            for i = 1:NUM_VARS
+                if lapB
+                    disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx), lapB_selected_data(i, idx)])
+                else
+                    disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx)])
+                end
+            end
+            
+            try
+                delete(app.vlines)
+            catch
+            end
+            for i = 1:size(plot_axes,2)
+                app.vlines(i) = xline(plot_axes(i), clickedX);
+            end
+
+
+            for j = 1:NUM_VARS
+                app.infoBox_data(1,j) = lapA_selected_data(j, idx);
+                if lapB
+                    app.infoBox_data(2,j) = lapB_selected_data(j, idx);
+                end
+            end
+
+            %app.infoBox_text(1).String = "asedfdd";
+
+            for i = [1,2]
+                infoBox_string = "Lap " + i + ":\n@ t = " + 0 + "\n";
+                for j = 1:NUM_VARS
+                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
+                end
+                infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
+                
+            end
+
         end
 
         % Button pushed function: upload_log_button
@@ -692,15 +734,15 @@ classdef data_visualizer < matlab.apps.AppBase
 
             % Create distance_check
             app.distance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.distance_check.Text = 'Distance (m)';
+            app.distance_check.Text = 'Lap Distance (m)';
             app.distance_check.FontSize = 10;
-            app.distance_check.Position = [335 338 79 22];
+            app.distance_check.Position = [335 338 100 22];
 
             % Create time_check
             app.time_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
-            app.time_check.Text = 'Time (s)';
+            app.time_check.Text = 'Lap Time (s)';
             app.time_check.FontSize = 10;
-            app.time_check.Position = [335 317 58 22];
+            app.time_check.Position = [335 317 100 22];
 
             % Show the figure after all components are created
             app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
