@@ -1,7 +1,7 @@
 MRacing Suspension Driver Data Feedback Tool
 
 HOW TO USE:
-1) Download and unzip "" into a folder
+1) Download and unzip "MRacing_DDT" into a folder
 2) Open data_visualizer.m in MATLAB and run the script
 3) Upload a log file to be visualized
     - NOTE: As of right now, only log data from MR23 works. Once MR25 exists, the app will be updated
