@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v0.1.0+';
-        PRIVATE_VER = 'dev-25.01.20.1';
+        PRIVATE_VER = 'dev-25.02.02.1';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -97,6 +97,8 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             %% Grab the variable data of the checkbox ones
+            % This is important because of how we index through the
+            % checkbox variables
             % Again, MAKE SURE NO \r!!! Only \n!!!!
             checkbox_vars = fileread('variables_checkbox.txt');
             checkbox_vars = strsplit(checkbox_vars, '\n');
@@ -158,10 +160,11 @@ classdef data_visualizer < matlab.apps.AppBase
                                 app.long_gs_check, app.lat_gs_check, app.vert_gs_check, ...
                                 app.roll_rate_check, app.pitch_rate_check, app.yaw_rate_check];
 
+            % Vector of each axis name
             axis_names = string(size(axis_checkboxes));
             axis_values = zeros(size(axis_checkboxes));
             for i = 1:size(axis_checkboxes, 2)
-                txt = convertCharsToStrings(get(axis_checkboxes(i), 'Text')); % HOLY SHIT THIS IS FUNNY LMFAOOOOO
+                txt = convertCharsToStrings(get(axis_checkboxes(i), 'Text'));
                 value = get(axis_checkboxes(i), 'Value');
                 axis_names(i) = txt;
                 if value
@@ -169,16 +172,18 @@ classdef data_visualizer < matlab.apps.AppBase
                 end
             end
 
+            % Checkbox variables filtered to only those selected
             selected_vars = 1:size(axis_checkboxes, 2);
             selected_vars = transpose(nonzeros(selected_vars .* axis_values));
             NUM_VARS = size(selected_vars,2);
 
             wrt_time = get(app.time_button, "Value");
 
+            % Grabbing lap-specific data and domain ranges
             lapB_x = 0;
             lapB_selected_data = 0;
+            % Grab data w.r.t. all laps if no lap inputted
             if lapA == false
-                % Grab data across all laps
                 if wrt_time
                     lapA_x = data{:,"xtime_s_"};
                 else
@@ -186,13 +191,14 @@ classdef data_visualizer < matlab.apps.AppBase
                 end
                 lapA_selected_data = data_checkbox{:, selected_vars}';
 
+            % Else, do it to specific laps(s)
             else
-                % Grab data specific to only laps specified
                 lapA_data = data(data.Dash_3_Lap_Number_None_ == lapA, :);
                 if lapB
                     lapB_data = data(data.Dash_3_Lap_Number_None_ == lapB, :);
                 end
 
+                % Normalize laps so time & distance always starts at 0
                 lapA_data{:,"xtime_s_"} = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
                 if lapB
                     lapB_data{:,"xtime_s_"} = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
@@ -203,7 +209,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     lapB_data{:,"xdist_m_"} = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
                 end
 
-                % Grab time/distance of lapA and lapB data for domain input
+                % New variable just for domain
                 if wrt_time
                     lapA_x = lapA_data{:,"xtime_s_"};
                     if lapB
@@ -216,10 +222,9 @@ classdef data_visualizer < matlab.apps.AppBase
                     end
                 end
     
-                % Grab checkbox variables of lapA and lapB data for range input
+                % Selected variables, but for specific laps
                 lapA_data_checkbox = lapA_data(:, checkbox_vars);
                 lapA_selected_data = lapA_data_checkbox{:, selected_vars}';
-
                 if lapB
                     lapB_data_checkbox = lapB_data(:, checkbox_vars);
                     lapB_selected_data = lapB_data_checkbox{:, selected_vars}';
@@ -241,55 +246,63 @@ classdef data_visualizer < matlab.apps.AppBase
                         "Error: Variance Conflict")
                 return
             end
+            % NOTE: The issue with variance when plotting w.r.t time is
+            % that there doesnt exist a function between distance and the
+            % variables. This is because the log data grabs values of each
+            % sensor ever 0.01 seconds, but this means the car can have the
+            % same distance value for multiple instances of time. As a
+            % result, we can't just subtract the two laps from eachother as
+            % their domains don't match (i.e. lap A will have the car at 5m
+            % for three logs, but lap B will have the car at 5m for four
+            % logs, so which values do we subtract?) In the future, this
+            % can probably be fixed by scrapping all log instances but one
+            % for each x value to make a function.
 
-            % Make both data ranges the same size
+            % Make both data ranges the same size so we can subtract them
             if size(lapA_x,1) > size(lapB_x,1)
                 max_x = lapA_x;
             else
                 max_x = lapB_x;
             end
             if plot_variances
-
                 variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
                 variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
                 variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
-
-                % TODO: Issue is that it isnt even a function lmao so its
-                % not as easy as just subtracting both things because like
-                % which value of x do we subtract it from lmao
             end
 
             %% Plot!
-
-            % timei = 0;
-            % timef = 10;
-            % x = timei:.01:timef;
-            % data1 = [sin(x) ; cos(x) ; tan(x) ; x/10 ; x.^2/10 ; x.^3/10 ; 0*x + 0.5 ; -x/10];
-            % data2 = data1 - 1;
-            % axis_names = ["Var A", "Var B", "Var C", "Var D", "Var E", "Var F", "Var G", "Var H"];
-            % selected_vars = [1,2,3,4,5,6,7,8];
 
             figureColor = [.94,.94,.94];
             tileColor = [.9,.9,.9];
             textColor = [0,0,0];
             outlineColor = [0,0,0];
-            lapAColor = [235/255, 52/255, 52/255]; %[0, .49, .96];
-            lapBColor = [52/255, 128/255, 235/255]; %[.89, .09, .04];
+            lapAColor = [235/255, 52/255, 52/255];
+            lapBColor = [52/255, 128/255, 235/255];
             varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
             f1 = uifigure('color', figureColor);
+
+            % OVERVIEW OF TILING
+            % Tile 1: All plots
+            %   Tile 1x: Each plot within tile 1 is its own unique tile
+            % Tile 2: Right hand side
+            %   Tile 2A: Info box
+            %     2Ai: Lap A info
+            %     2Aii: Lap B info
+            %   Tile 2B: GG diagram
+            %   FUTURE: Track map
             
-            % T Tiled layout
+            % T Layout
             T = tiledlayout(f1, 1,3, "TileSpacing", "compact", "Padding", "compact");
             
-            % t1 Tile 1: Tiled layout: Graphs of variables
+            % T1 Layout: Graphs of variables
             t1 = tiledlayout(T, "vertical", "TileSpacing", "compact", "Padding", "compact");
             t1.Layout.Tile = 1;
             t1.Layout.TileSpan = [1,2];
             
-            % Subtiles: Individual graphs of variables
+            % T1x: Individual graphs of variables
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
                 hold(ax, "on");
@@ -316,6 +329,7 @@ classdef data_visualizer < matlab.apps.AppBase
                 xticklabels(ax, "");
                 ax.YLabel.String = axis_names(selected_vars(i));
             
+                % Add to plot_axes so we can link them all after the fact
                 plot_axes(i) = ax;
 
                 if plot_variances
@@ -332,10 +346,12 @@ classdef data_visualizer < matlab.apps.AppBase
                     xticklabels(ax, "");
                     ax.YLabel.String = "Variance";
 
+                    % Same distance above and below horizontal axis
                     YL = get(ax, 'YLim');
                     maxlim = max(abs(YL));
                     set(ax, 'YLim', [-maxlim maxlim]);
 
+                    % Similar for linking
                     variance_axes(i) = ax;
                 end
 
@@ -348,28 +364,30 @@ classdef data_visualizer < matlab.apps.AppBase
                 ax.XLabel.String = "Distance (m)";
             end
 
+            % Link all axes
             if plot_variances
                 linkaxes([plot_axes, variance_axes], 'x')
             else
                 linkaxes(plot_axes, 'x')
             end
 
+            % Enable user input for each plot
             for i = 1:NUM_VARS
                 ax = plot_axes(i);
                 ax.ButtonDownFcn = @(src, event) handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
             end
             
-            % t2 Tile 2: Tiled layout: Infobox and map
+            % T2 Layout: Right hand side
             t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
             t2.Layout.Tile = 3;
             
-            % t2a Subtile A: Tiled layout: 2 columns for track data of both laps
+            % T2A Layout: Info box
             ax = nexttile(t2, 1, [1,1]);
             ax.Visible = 0; % Make axes invisible for text display
             t2a = tiledlayout(t2, 1,2, "TileSpacing", "none", "Padding", "none");
             t2a.Layout.Tile = 1;
             
-            % Subsubtile i & ii: Lap data of track 1 & 2
+            % T2Ai & T2Aii: Lap A and Lap B info
             for i = [1,2]
                 ax = nexttile(t2a, i, [1,1]);
                 ax.XTick = [];
@@ -387,7 +405,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     "Color", textColor, 'fontsize',5,'fontunits','normalized');
             end
             
-            % Subtile B: GG Diagram
+            % T2B: GG Diagram
             ax = nexttile(t2, 2, [1,1]);
 
             lat_g = data_checkbox{:, "Average_IMU_Lat_g_"};
@@ -409,23 +427,26 @@ classdef data_visualizer < matlab.apps.AppBase
 
             delete(msg)
         end
-
-        % hmmm
-       function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+        
+        function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
             % Get the click location
             clickPosition = event.IntersectionPoint;
             clickedX = clickPosition(1); % X-coordinate of the click
+            % disp(['x = ', num2str(clickedX)])
 
-            disp(['x = ', num2str(clickedX)])
+            % Get domain index corresponding to the point clicked
+
             [~, idx] = min(abs(max_x - clickedX));
-            for i = 1:NUM_VARS
-                if lapB
-                    disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx), lapB_selected_data(i, idx)])
-                else
-                    disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx)])
-                end
-            end
+
+            % for i = 1:NUM_VARS
+            %     if lapB
+            %         disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx), lapB_selected_data(i, idx)])
+            %     else
+            %         disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx)])
+            %     end
+            % end
             
+            % Delete old vertical line (if it exists) and replace it
             try
                 delete(app.vlines)
             catch
@@ -434,16 +455,15 @@ classdef data_visualizer < matlab.apps.AppBase
                 app.vlines(i) = xline(plot_axes(i), clickedX);
             end
 
-
+            % Grab data from plots at domain index
             for j = 1:NUM_VARS
                 app.infoBox_data(1,j) = lapA_selected_data(j, idx);
                 if lapB
                     app.infoBox_data(2,j) = lapB_selected_data(j, idx);
                 end
             end
-
-            %app.infoBox_text(1).String = "asedfdd";
-
+            
+            % Update infobox string
             for i = [1,2]
                 infoBox_string = "Lap " + i + ":\n@ t = " + clickedX + "\n";
                 for j = 1:NUM_VARS
@@ -465,7 +485,6 @@ classdef data_visualizer < matlab.apps.AppBase
             else
                 app.file = f;
                 app.location = l;
-                %app.upload_log_button.Text = app.file;
                 app.file_label.Text = strcat(app.location, app.file);
             end
         end
