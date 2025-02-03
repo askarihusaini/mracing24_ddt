@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v0.1.0+';
-        PRIVATE_VER = 'dev-25.02.02.2';
+        PRIVATE_VER = 'dev-25.02.02.1';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -305,7 +305,7 @@ classdef data_visualizer < matlab.apps.AppBase
             %     2Ai: Lap A info
             %     2Aii: Lap B info
             %   Tile 2B: GG diagram
-            %   Tile 2C: Track map (TODO)
+            %   FUTURE: Track map
             
             % T Layout
             T = tiledlayout(f1, 1,3, "TileSpacing", "compact", "Padding", "compact");
