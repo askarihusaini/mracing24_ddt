@@ -6,7 +6,7 @@ HOW TO USE:
 3) Upload a log file to be visualized
     - NOTE: As of right now, only log data from MR23 works. Once MR25 exists, the app will be updated
     - If the log file begins with ddt_, no need to reformat the file
-    - Otherwise, check the "Reformat File" button so it load faster next time
+    - Otherwise, check the "Reformat File" button so it loads faster next time
 4) (Optional) Select a specific lap(s) (Lap A & B) to be visualized
 5) Select which variables to be visualized
 6) Select what the domain should be (time or distance traveled)
