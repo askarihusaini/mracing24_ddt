@@ -16,3 +16,6 @@ HOW TO USE:
 
 All source code can be found by clicking the "Github Repo" link in the top right
 For any inquiries, DM me on slack :)
+
+If you want to mess around with some MR23 log data, a handful of files I used for testing can be found here:
+https://drive.google.com/file/d/1r3SQX5aWtWhb_4NIApD_iwJtWHasq-9m/view?usp=sharing
