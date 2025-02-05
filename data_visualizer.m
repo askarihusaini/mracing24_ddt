@@ -2,8 +2,8 @@ classdef data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v1.0.0';
-        PRIVATE_VER = 'dev-25.02.03.1';
+        PUBLIC_VER = 'v1.0.1';
+        PRIVATE_VER = 'dev-25.02.04.1';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -53,7 +53,8 @@ classdef data_visualizer < matlab.apps.AppBase
         location = ""
         vlines
         infoBox_data
-        infoBox_text
+        infoBox_text_1
+        infoBox_text_2
     end
     
 
@@ -293,6 +294,7 @@ classdef data_visualizer < matlab.apps.AppBase
             lapBColor = [52/255, 128/255, 235/255];
             varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
+            % Vertical line color defined in below function
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
             f1 = uifigure('color', figureColor);
@@ -414,8 +416,14 @@ classdef data_visualizer < matlab.apps.AppBase
                    infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
                 end
                 infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
-                app.infoBox_text(i) = text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+                
+                if i == 1
+                    app.infoBox_text_1 = text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
                     "Color", textColor, 'fontsize',5,'fontunits','normalized');
+                else
+                    app.infoBox_text_2 = text(ax, 0.05,.975,sprintf(infoBox_string), 'Horiz','left', 'Vert','top', ...
+                    "Color", textColor, 'fontsize',5,'fontunits','normalized');
+                end
             end
             
             % T2B: GG Diagram
@@ -442,6 +450,8 @@ classdef data_visualizer < matlab.apps.AppBase
         end
         
         function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+            vlineColor = [235/255, 201/255, 52/255];
+            
             % Get the click location
             clickPosition = event.IntersectionPoint;
             clickedX = clickPosition(1); % X-coordinate of the click
@@ -465,7 +475,7 @@ classdef data_visualizer < matlab.apps.AppBase
             catch
             end
             for i = 1:size(plot_axes,2)
-                app.vlines(i) = xline(plot_axes(i), clickedX);
+                app.vlines(i) = xline(plot_axes(i), clickedX, "Color", vlineColor, "LineWidth", 1.5);
             end
 
             % Grab data from plots at domain index
@@ -483,7 +493,12 @@ classdef data_visualizer < matlab.apps.AppBase
                    infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
                 end
                 infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
-                app.infoBox_text(i).String = sprintf(infoBox_string);
+                
+                if i == 1
+                    app.infoBox_text_1.String = sprintf(infoBox_string);
+                else
+                    app.infoBox_text_2.String = sprintf(infoBox_string);
+                end
             end
 
         end
