@@ -2,8 +2,8 @@ classdef data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v1.0.1';
-        PRIVATE_VER = 'dev-25.02.04.1';
+        PUBLIC_VER = 'v1.0.1+';
+        PRIVATE_VER = 'dev-25.02.06.1';
         
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         time_check               matlab.ui.control.CheckBox
@@ -807,6 +807,8 @@ classdef data_visualizer < matlab.apps.AppBase
 
             % Register the app with App Designer
             registerApp(app, app.MRacing2024DataVisualizerUIFigure)
+
+            app.MRacing2024DataVisualizerUIFigure.AutoResizeChildren = 'off';
 
             if nargout == 0
                 clear app
