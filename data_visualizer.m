@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v1.0.1+';
-        PRIVATE_VER = 'dev-25.02.07.3';
+        PRIVATE_VER = 'dev-25.02.07.4';
        
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -70,7 +70,7 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             w = warning ('off','all');
-            msg = msgbox("Please wait :)");
+            msg = msgbox("Loading log data...", "Please wait :)");
 
             %% Reformat file
             if get(app.reformat_file_check, 'Value') == 1
@@ -231,7 +231,7 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             %% Variance
-            plot_variances = false; %get(app.variance_check, "Value");
+            plot_variances = false; % get(app.variance_check, "Value");
             if plot_variances && ~lapB
                 delete(msg)
                 msgbox("Error: Input a second lap to display variance", ...
@@ -269,6 +269,7 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             %% Plot!
+            set(findobj(msg,'Tag','MessageBox'),'String', 'Generating figure...')
 
             figureColor = [.94,.94,.94];
             tileColor = [.9,.9,.9];
