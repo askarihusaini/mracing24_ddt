@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v1.0.1+';
-        PRIVATE_VER = 'dev-25.02.07.2';
+        PRIVATE_VER = 'dev-25.02.07.1';
        
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -509,9 +509,9 @@ classdef data_visualizer < matlab.apps.AppBase
         % Create UIFigure and components
         function createComponents(app)
 
-            if isfile('checkbox_states.mat') % Check if file exists
-                loadedData = load('checkbox_states.mat', 'axis_values'); % Load data
-                checkbox_states = loadedData.axis_values; % Extract the variable
+            if isfile('checkboxStates.mat') % Check if file exists
+                loadedData = load('checkboxStates.mat', 'checkboxStates'); % Load data
+                checkbox_states = loadedData.checkboxStates; % Extract the variable
             else
                 checkbox_states = zeros(1, 18); % Default state if no file exists
             end
