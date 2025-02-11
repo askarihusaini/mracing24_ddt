@@ -3,9 +3,9 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v1.0.1+';
-        PRIVATE_VER = 'dev-25.02.07.1';
+        PRIVATE_VER = 'dev-25.02.07.4';
        
-        MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
+        MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
@@ -50,6 +50,9 @@ classdef data_visualizer < matlab.apps.AppBase
         NUM_CHECKBOXES = 18;
         file = "";
         location = "";
+        wrt_time
+        arrowKeyIncrement = 1;
+        clickedX
         vlines
         infoBox_data
         infoBox_text_1
@@ -70,7 +73,7 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             w = warning ('off','all');
-            msg = msgbox("Please wait :)");
+            msg = msgbox("Loading log data...", "Please wait :)");
 
             %% Reformat file
             if get(app.reformat_file_check, 'Value') == 1
@@ -175,14 +178,14 @@ classdef data_visualizer < matlab.apps.AppBase
                 return
             end
 
-            wrt_time = get(app.time_button, "Value");
+            app.wrt_time = get(app.time_button, "Value");
 
             % Grabbing lap-specific data and domain ranges
             lapB_x = 0;
             lapB_selected_data = 0;
             % Grab data w.r.t. all laps if no lap inputted
             if lapA == false
-                if wrt_time
+                if app.wrt_time
                     lapA_x = data{:,"xtime_s_"};
                 else
                     lapA_x = data{:,"xdist_m_"};
@@ -208,7 +211,7 @@ classdef data_visualizer < matlab.apps.AppBase
                 end
 
                 % New variable just for domain
-                if wrt_time
+                if app.wrt_time
                     lapA_x = lapA_data{:,"xtime_s_"};
                     if lapB
                         lapB_x = lapB_data{:,"xtime_s_"};
@@ -230,45 +233,46 @@ classdef data_visualizer < matlab.apps.AppBase
 
             end
 
-            %% Variance
-            plot_variances = false; %get(app.variance_check, "Value");
-            if plot_variances && ~lapB
-                delete(msg)
-                msgbox("Error: Input a second lap to display variance", ...
-                        "Error")
-                return
-            end
-            if plot_variances && ~wrt_time
-                delete(msg)
-                msgbox("Error: Variance display only works when plotting w.r.t time", ...
-                        "Error")
-                return
-            end
-            % NOTE: The issue with variance when plotting w.r.t time is
-            % that there doesnt exist a function between distance and the
-            % variables. This is because the log data grabs values of each
-            % sensor ever 0.01 seconds, but this means the car can have the
-            % same distance value for multiple instances of time. As a
-            % result, we can't just subtract the two laps from eachother as
-            % their domains don't match (i.e. lap A will have the car at 5m
-            % for three logs, but lap B will have the car at 5m for four
-            % logs, so which values do we subtract?) In the future, this
-            % can probably be fixed by scrapping all log instances but one
-            % for each x value to make a function.
-
-            % Make both data ranges the same size so we can subtract them
             if size(lapA_x,1) > size(lapB_x,1)
                 max_x = lapA_x;
             else
                 max_x = lapB_x;
             end
-            if plot_variances
-                variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
-                variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
-                variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
-            end
 
+
+            %% Variance
+            % plot_variances = get(app.variance_check, "Value");
+            % if plot_variances && ~lapB
+            %     delete(msg)
+            %     msgbox("Error: Input a second lap to display variance", ...
+            %             "Error")
+            %     return
+            % end
+            % if plot_variances && ~app.wrt_time
+            %     delete(msg)
+            %     msgbox("Error: Variance display only works when plotting w.r.t time", ...
+            %             "Error")
+            %     return
+            % end
+            % % NOTE: The issue with variance when plotting w.r.t distance is
+            % % that there doesnt exist a function between distance and the
+            % % variables. This is because the log data grabs values of each
+            % % sensor ever 0.01 seconds, but this means the car can have the
+            % % same distance value for multiple instances of time. As a
+            % % result, we can't just subtract the two laps from eachother as
+            % % their domains don't match (i.e. lap A will have the car at 5m
+            % % for three logs, but lap B will have the car at 5m for four
+            % % logs, so which values do we subtract?) In the future, this
+            % % can probably be fixed by scrapping all log instances but one
+            % % for each x value to make a function.
+            % 
+            % if plot_variances
+            %     variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
+            %     variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
+            %     variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
+            % end
             %% Plot!
+            set(findobj(msg,'Tag','MessageBox'),'String', 'Generating figure...')
 
             figureColor = [.94,.94,.94];
             tileColor = [.9,.9,.9];
@@ -276,7 +280,6 @@ classdef data_visualizer < matlab.apps.AppBase
             outlineColor = [0,0,0];
             lapAColor = [235/255, 52/255, 52/255];
             lapBColor = [52/255, 128/255, 235/255];
-            varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
             % Vertical line color defined in below function
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
@@ -331,44 +334,49 @@ classdef data_visualizer < matlab.apps.AppBase
                 % Add to plot_axes so we can link them all after the fact
                 plot_axes(i) = ax;
 
-                if plot_variances
-                    ax = nexttile(t1);
+                % If plotting distance w.r.t time among 2 laps
+                if app.wrt_time && axis_checkboxes(2) == 1 && lapB
                     
-                    plot(ax, max_x, variance_lapB(i,:) - variance_lapA(i,:), "Color", varianceColor);
-                    yline(ax, 0, "Color", ylineColor);
-
-                    ax.XGrid = "on";
-                    ax.YGrid = "on";
-                    ax.XMinorGrid = "on";
-                    ax.YMinorGrid = "on";
-                    ax.Color = tileColor;
-                    xticklabels(ax, "");
-                    ax.YLabel.String = "Variance";
-
-                    % Same distance above and below horizontal axis
-                    YL = get(ax, 'YLim');
-                    maxlim = max(abs(YL));
-                    set(ax, 'YLim', [-maxlim maxlim]);
-
-                    % Similar for linking
-                    variance_axes(i) = ax;
                 end
+
+                % if plot_variances
+                %     ax = nexttile(t1);
+                % 
+                %     plot(ax, max_x, variance_lapB(i,:) - variance_lapA(i,:), "Color", varianceColor);
+                %     yline(ax, 0, "Color", ylineColor);
+                % 
+                %     ax.XGrid = "on";
+                %     ax.YGrid = "on";
+                %     ax.XMinorGrid = "on";
+                %     ax.YMinorGrid = "on";
+                %     ax.Color = tileColor;
+                %     xticklabels(ax, "");
+                %     ax.YLabel.String = "Variance";
+                % 
+                %     % Same distance above and below horizontal axis
+                %     YL = get(ax, 'YLim');
+                %     maxlim = max(abs(YL));
+                %     set(ax, 'YLim', [-maxlim maxlim]);
+                % 
+                %     % Similar for linking
+                %     variance_axes(i) = ax;
+                % end
 
             end
             xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XTickLabelRotation = 45;
-            if wrt_time
+            if app.wrt_time
                 ax.XLabel.String = "Time (s)";
             else
                 ax.XLabel.String = "Distance (m)";
             end
 
             % Link all axes
-            if plot_variances
-                linkaxes([plot_axes, variance_axes], 'x')
-            else
+            % if plot_variances
+            %     linkaxes([plot_axes, variance_axes], 'x')
+            % else
                 linkaxes(plot_axes, 'x')
-            end
+            % end
 
             % Enable user input for each plot
             for i = 1:NUM_VARS
@@ -395,7 +403,11 @@ classdef data_visualizer < matlab.apps.AppBase
                 ax.Box = "on";
             
                 app.infoBox_data = zeros(2,NUM_VARS);
-                infoBox_string = "Lap " + i + ":\n@ t = " + 0 + "\n";
+                if app.wrt_time
+                    infoBox_string = "Lap " + i + ":\n@ t = " + 0 + "\n";
+                else
+                    infoBox_string = "Lap " + i + ":\n@ x = " + 0 + "\n";
+                end
                 for j = 1:NUM_VARS
                    infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
                 end
@@ -429,23 +441,21 @@ classdef data_visualizer < matlab.apps.AppBase
             title(ax, "G-G Diagram");
             colorbar(ax);
             
-
             delete(msg)
+
+            f1.KeyPressFcn = @(src, event) UIFigureKeyPressFcn(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
         end
         
-        function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
-            vlineColor = [235/255, 201/255, 52/255];
-            
+        function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)           
             % Get the click location
             clickPosition = event.IntersectionPoint;
-            clickedX = clickPosition(1); % X-coordinate of the click
-            % disp(['x = ', num2str(clickedX)]) % Debugging purposes
+            app.clickedX = clickPosition(1); % X-coordinate of the click
 
-            % Get domain index corresponding to the point clicked
+            generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
 
-            [~, idx] = min(abs(max_x - clickedX));
+            % % Debugging Purposes
+            % disp(['x = ', num2str(clickedX)]
 
-            % Deubgging purposes
             % for i = 1:NUM_VARS
             %     if lapB
             %         disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx), lapB_selected_data(i, idx)])
@@ -453,6 +463,32 @@ classdef data_visualizer < matlab.apps.AppBase
             %         disp([axis_names(selected_vars(i)), lapA_selected_data(i, idx)])
             %     end
             % end
+        end
+
+        function UIFigureKeyPressFcn(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+            switch event.Key
+                case 'leftarrow'
+                    try
+                        app.clickedX = app.clickedX - app.arrowKeyIncrement;
+                        generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+                    catch
+                    end
+                case 'rightarrow'
+                    try
+                        app.clickedX = app.clickedX + app.arrowKeyIncrement;
+                        generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+                    catch
+                    end
+                otherwise
+                    return
+            end
+        end
+
+        function generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+            vlineColor = [52/255, 235/255, 128/255];
+
+            % Get domain index corresponding to the point clicked
+            [~, idx] = min(abs(max_x - app.clickedX));
             
             % Delete old vertical line (if it exists) and replace it
             try
@@ -460,7 +496,7 @@ classdef data_visualizer < matlab.apps.AppBase
             catch
             end
             for i = 1:size(plot_axes,2)
-                app.vlines(i) = xline(plot_axes(i), clickedX, "Color", vlineColor, "LineWidth", 1.5);
+                app.vlines(i) = xline(plot_axes(i), app.clickedX, "Color", vlineColor, "LineWidth", 1.5);
             end
 
             % Grab data from plots at domain index
@@ -473,7 +509,11 @@ classdef data_visualizer < matlab.apps.AppBase
             
             % Update infobox string
             for i = [1,2]
-                infoBox_string = "Lap " + i + ":\n@ t = " + clickedX + "\n";
+                if app.wrt_time
+                    infoBox_string = "Lap " + i + ":\n@ t = " + app.clickedX + "\n";
+                else
+                    infoBox_string = "Lap " + i + ":\n@ x = " + app.clickedX + "\n";
+                end
                 for j = 1:NUM_VARS
                    infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
                 end
@@ -485,7 +525,6 @@ classdef data_visualizer < matlab.apps.AppBase
                     app.infoBox_text_2.String = sprintf(infoBox_string);
                 end
             end
-
         end
 
         % Button pushed function: upload_log_button
@@ -509,9 +548,9 @@ classdef data_visualizer < matlab.apps.AppBase
         % Create UIFigure and components
         function createComponents(app)
 
-            if isfile('checkboxStates.mat') % Check if file exists
-                loadedData = load('checkboxStates.mat', 'checkboxStates'); % Load data
-                checkbox_states = loadedData.checkboxStates; % Extract the variable
+            if isfile('checkbox_states.mat') % Check if file exists
+                loadedData = load('checkbox_states.mat', 'axis_values'); % Load data
+                checkbox_states = loadedData.axis_values; % Extract the variable
             else
                 checkbox_states = zeros(1, 18); % Default state if no file exists
             end
@@ -520,18 +559,18 @@ classdef data_visualizer < matlab.apps.AppBase
             % Get the file path for locating images
             pathToMLAPP = fileparts(mfilename('fullpath'));
 
-            % Create MRacing2024DataVisualizerUIFigure and hide until all components are created
-            app.MRacing2024DataVisualizerUIFigure = uifigure('Visible', 'off');
-            app.MRacing2024DataVisualizerUIFigure.Position = [100 100 480 720];
-            app.MRacing2024DataVisualizerUIFigure.Name = 'MRacing 2024 Data Visualizer';
+            % Create MRacingDDT and hide until all components are created
+            app.MRacingDDT = uifigure('Visible', 'off');
+            app.MRacingDDT.Position = [100 100 480 720];
+            app.MRacingDDT.Name = 'MRacing Driver Data Tool';
 
             % Create Image
-            app.Image = uiimage(app.MRacing2024DataVisualizerUIFigure);
+            app.Image = uiimage(app.MRacingDDT);
             app.Image.Position = [1 1 480 720];
             app.Image.ImageSource = fullfile(pathToMLAPP, 'app_resources', 'background.png');
 
             % Create run_visualizer_button
-            app.run_visualizer_button = uibutton(app.MRacing2024DataVisualizerUIFigure, 'push');
+            app.run_visualizer_button = uibutton(app.MRacingDDT, 'push');
             app.run_visualizer_button.ButtonPushedFcn = createCallbackFcn(app, @run_visualizer, true);
             app.run_visualizer_button.BackgroundColor = [0 0.149 0.302];
             app.run_visualizer_button.FontSize = 14;
@@ -541,12 +580,12 @@ classdef data_visualizer < matlab.apps.AppBase
             app.run_visualizer_button.Text = 'Run Visualizer';
 
             % Create mracing_logo
-            app.mracing_logo = uiimage(app.MRacing2024DataVisualizerUIFigure);
+            app.mracing_logo = uiimage(app.MRacingDDT);
             app.mracing_logo.Position = [20 620 300 80];
             app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'app_resources', 'mracing_logo.png');
 
             % Create ddvt_header
-            app.ddvt_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.ddvt_header = uilabel(app.MRacingDDT);
             app.ddvt_header.FontName = 'Century Gothic';
             app.ddvt_header.FontSize = 18;
             app.ddvt_header.FontWeight = 'bold';
@@ -555,7 +594,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.ddvt_header.Text = 'DRIVER DATA VISUALIZATION TOOL';
 
             % Create version_label
-            app.version_label = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.version_label = uilabel(app.MRacingDDT);
             app.version_label.HorizontalAlignment = 'right';
             app.version_label.FontName = 'Century Gothic';
             app.version_label.FontColor = [0.502 0.502 0.502];
@@ -563,7 +602,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.version_label.Text = {'Askari Husaini'; app.PUBLIC_VER; app.PRIVATE_VER};
 
             % Create github_link
-            app.github_link = uihyperlink(app.MRacing2024DataVisualizerUIFigure);
+            app.github_link = uihyperlink(app.MRacingDDT);
             app.github_link.VisitedColor = [0.502 0.502 0.502];
             app.github_link.HorizontalAlignment = 'right';
             app.github_link.FontName = 'Century Gothic';
@@ -573,7 +612,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.github_link.Text = 'Github repo';
 
             % Create log_file_header
-            app.log_file_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.log_file_header = uilabel(app.MRacingDDT);
             app.log_file_header.FontName = 'Century Gothic';
             app.log_file_header.FontSize = 14;
             app.log_file_header.FontWeight = 'bold';
@@ -582,7 +621,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.log_file_header.Text = 'Log File & Lap(s) Analyzed';
 
             % Create upload_log_button
-            app.upload_log_button = uibutton(app.MRacing2024DataVisualizerUIFigure, 'push');
+            app.upload_log_button = uibutton(app.MRacingDDT, 'push');
             app.upload_log_button.ButtonPushedFcn = createCallbackFcn(app, @upload_file, true);
             app.upload_log_button.BackgroundColor = [0.902 0.902 0.902];
             app.upload_log_button.FontSize = 10;
@@ -590,14 +629,14 @@ classdef data_visualizer < matlab.apps.AppBase
             app.upload_log_button.Text = 'Upload log file';
 
             % Create file_label
-            app.file_label = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.file_label = uilabel(app.MRacingDDT);
             app.file_label.FontSize = 10;
             app.file_label.Tooltip = {''};
             app.file_label.Position = [25 485 430 15];
             app.file_label.Text = 'No file selected';
 
             % Create lapA_edit
-            app.lapA_edit = uieditfield(app.MRacing2024DataVisualizerUIFigure, 'numeric');
+            app.lapA_edit = uieditfield(app.MRacingDDT, 'numeric');
             app.lapA_edit.RoundFractionalValues = 'on';
             app.lapA_edit.AllowEmpty = 'on';
             app.lapA_edit.FontSize = 10;
@@ -606,7 +645,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.lapA_edit.Value = [];
 
             % Create lapB_edit
-            app.lapB_edit = uieditfield(app.MRacing2024DataVisualizerUIFigure, 'numeric');
+            app.lapB_edit = uieditfield(app.MRacingDDT, 'numeric');
             app.lapB_edit.RoundFractionalValues = 'on';
             app.lapB_edit.AllowEmpty = 'on';
             app.lapB_edit.FontSize = 10;
@@ -615,27 +654,27 @@ classdef data_visualizer < matlab.apps.AppBase
             app.lapB_edit.Value = [];
 
             % Create reformat_file_check
-            app.reformat_file_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.reformat_file_check = uicheckbox(app.MRacingDDT);
             app.reformat_file_check.Text = 'Reformat file';
             app.reformat_file_check.FontSize = 10;
             app.reformat_file_check.Position = [25 460 80 25];
 
             % Create Lap1Label
-            app.Lap1Label = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.Lap1Label = uilabel(app.MRacingDDT);
             app.Lap1Label.HorizontalAlignment = 'right';
             app.Lap1Label.FontSize = 10;
             app.Lap1Label.Position = [130 505 33 25];
             app.Lap1Label.Text = 'Lap A:';
 
             % Create LapBLabel
-            app.LapBLabel = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.LapBLabel = uilabel(app.MRacingDDT);
             app.LapBLabel.HorizontalAlignment = 'right';
             app.LapBLabel.FontSize = 10;
             app.LapBLabel.Position = [259 505 34 25];
             app.LapBLabel.Text = 'Lap B:';
 
             % Create variables_header
-            app.variables_header = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.variables_header = uilabel(app.MRacingDDT);
             app.variables_header.FontName = 'Century Gothic';
             app.variables_header.FontSize = 14;
             app.variables_header.FontWeight = 'bold';
@@ -644,133 +683,133 @@ classdef data_visualizer < matlab.apps.AppBase
             app.variables_header.Text = 'Variables to Visualize';
 
             % Create time_check
-            app.time_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.time_check = uicheckbox(app.MRacingDDT);
             app.time_check.Text = 'Time (s)';
             app.time_check.FontSize = 10;
             app.time_check.Position = [335 317 58 22];
             app.time_check.Value = checkbox_states(1);
 
             % Create distance_check
-            app.distance_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.distance_check = uicheckbox(app.MRacingDDT);
             app.distance_check.Text = 'Distance (m)';
             app.distance_check.FontSize = 10;
             app.distance_check.Position = [335 338 79 22];
             app.distance_check.Value = checkbox_states(2);
 
             % Create throttle_position_check
-            app.throttle_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.throttle_position_check = uicheckbox(app.MRacingDDT);
             app.throttle_position_check.Text = 'Throttle Position (%)';
             app.throttle_position_check.FontSize = 10;
             app.throttle_position_check.Position = [25 380 113 22];
             app.throttle_position_check.Value = checkbox_states(3);
 
             % Create brake_position_check
-            app.brake_position_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.brake_position_check = uicheckbox(app.MRacingDDT);
             app.brake_position_check.Text = 'Brake Position (%)';
             app.brake_position_check.FontSize = 10;
             app.brake_position_check.Position = [25 359 105 22];
             app.brake_position_check.Value = checkbox_states(4);
 
             % Create front_brakes_check
-            app.front_brakes_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.front_brakes_check = uicheckbox(app.MRacingDDT);
             app.front_brakes_check.Text = 'Front Brakes (psi)';
             app.front_brakes_check.FontSize = 10;
             app.front_brakes_check.Position = [25 338 101 22];
             app.front_brakes_check.Value = checkbox_states(5);
 
             % Create read_brakes_check
-            app.read_brakes_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.read_brakes_check = uicheckbox(app.MRacingDDT);
             app.read_brakes_check.Text = 'Rear Brakes (psi)';
             app.read_brakes_check.FontSize = 10;
             app.read_brakes_check.Position = [25 317 100 22];
             app.read_brakes_check.Value = checkbox_states(6);
 
             % Create fl_speed_check
-            app.fl_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.fl_speed_check = uicheckbox(app.MRacingDDT);
             app.fl_speed_check.Text = 'FL Tyre Speed (rpm)';
             app.fl_speed_check.FontSize = 10;
             app.fl_speed_check.Position = [180 380 114 22];
             app.fl_speed_check.Value = checkbox_states(7);
 
             % Create fr_speed_check
-            app.fr_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.fr_speed_check = uicheckbox(app.MRacingDDT);
             app.fr_speed_check.Text = 'FR Tyre Speed (rpm)';
             app.fr_speed_check.FontSize = 10;
             app.fr_speed_check.Position = [180 359 116 22];
             app.fr_speed_check.Value = checkbox_states(8);
 
             % Create rl_speed_check
-            app.rl_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.rl_speed_check = uicheckbox(app.MRacingDDT);
             app.rl_speed_check.Text = 'RL Tyre Speed (rpm)';
             app.rl_speed_check.FontSize = 10;
             app.rl_speed_check.Position = [180 338 115 22];
             app.rl_speed_check.Value = checkbox_states(9);
 
             % Create rr_speed_check
-            app.rr_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.rr_speed_check = uicheckbox(app.MRacingDDT);
             app.rr_speed_check.Text = 'RR Tyre Speed (rpm)';
             app.rr_speed_check.FontSize = 10;
             app.rr_speed_check.Position = [180 317 117 22];
             app.rr_speed_check.Value = checkbox_states(10);
 
             % Create vehicle_speed_check
-            app.vehicle_speed_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.vehicle_speed_check = uicheckbox(app.MRacingDDT);
             app.vehicle_speed_check.Text = 'Vehichle Speed (mph)';
             app.vehicle_speed_check.FontSize = 10;
             app.vehicle_speed_check.Position = [335 380 120 22];
             app.vehicle_speed_check.Value = checkbox_states(11);
 
             % Create brake_bias_check
-            app.brake_bias_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.brake_bias_check = uicheckbox(app.MRacingDDT);
             app.brake_bias_check.Text = 'Brake Bias (#)';
             app.brake_bias_check.FontSize = 10;
             app.brake_bias_check.Position = [335 359 85 22];
             app.brake_bias_check.Value = checkbox_states(12);
 
             % Create long_gs_check
-            app.long_gs_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.long_gs_check = uicheckbox(app.MRacingDDT);
             app.long_gs_check.Text = 'Longitudinal Gs (g)';
             app.long_gs_check.FontSize = 10;
             app.long_gs_check.Position = [25 286 106 22];
             app.long_gs_check.Value = checkbox_states(13);
 
             % Create lat_gs_check
-            app.lat_gs_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.lat_gs_check = uicheckbox(app.MRacingDDT);
             app.lat_gs_check.Text = 'Lateral Gs (g)';
             app.lat_gs_check.FontSize = 10;
             app.lat_gs_check.Position = [25 265 83 22];
             app.lat_gs_check.Value = checkbox_states(14);
 
             % Create vert_gs_check
-            app.vert_gs_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.vert_gs_check = uicheckbox(app.MRacingDDT);
             app.vert_gs_check.Text = 'Vertical Gs (g)';
             app.vert_gs_check.FontSize = 10;
             app.vert_gs_check.Position = [25 244 85 22];
             app.vert_gs_check.Value = checkbox_states(15);
 
             % Create roll_rate_check
-            app.roll_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.roll_rate_check = uicheckbox(app.MRacingDDT);
             app.roll_rate_check.Text = 'Roll Rate (deg/s)';
             app.roll_rate_check.FontSize = 10;
             app.roll_rate_check.Position = [180 286 97 22];
             app.roll_rate_check.Value = checkbox_states(16);
 
             % Create pitch_rate_check
-            app.pitch_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.pitch_rate_check = uicheckbox(app.MRacingDDT);
             app.pitch_rate_check.Text = 'Pitch Rate (deg/s)';
             app.pitch_rate_check.FontSize = 10;
             app.pitch_rate_check.Position = [180 265 102 22];
             app.pitch_rate_check.Value = checkbox_states(17);
 
             % Create yaw_rate_check
-            app.yaw_rate_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.yaw_rate_check = uicheckbox(app.MRacingDDT);
             app.yaw_rate_check.Text = 'Yaw Rate (deg/s)';
             app.yaw_rate_check.FontSize = 10;
             app.yaw_rate_check.Position = [180 244 99 22];
             app.yaw_rate_check.Value = checkbox_states(18);
 
             % Create plot_wrt_group
-            app.plot_wrt_group = uibuttongroup(app.MRacing2024DataVisualizerUIFigure);
+            app.plot_wrt_group = uibuttongroup(app.MRacingDDT);
             app.plot_wrt_group.Title = 'Plot w.r.t';
             app.plot_wrt_group.Position = [20 135 123 85];
 
@@ -786,7 +825,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.distance_button.Position = [11 10 100 23];
 
             % Create miguel_quote
-            app.miguel_quote = uilabel(app.MRacing2024DataVisualizerUIFigure);
+            app.miguel_quote = uilabel(app.MRacingDDT);
             app.miguel_quote.HorizontalAlignment = 'right';
             app.miguel_quote.FontName = 'Century Gothic';
             app.miguel_quote.FontAngle = 'italic';
@@ -795,7 +834,7 @@ classdef data_visualizer < matlab.apps.AppBase
             app.miguel_quote.Text = {'" This makes me nut "'; 'Miguel Bigott -'};
 
             % Show the figure after all components are created
-            app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
+            app.MRacingDDT.Visible = 'on';
         end
     end
 
@@ -809,9 +848,9 @@ classdef data_visualizer < matlab.apps.AppBase
             createComponents(app)
 
             % Register the app with App Designer
-            registerApp(app, app.MRacing2024DataVisualizerUIFigure)
+            registerApp(app, app.MRacingDDT)
 
-            app.MRacing2024DataVisualizerUIFigure.AutoResizeChildren = 'off';
+            app.MRacingDDT.AutoResizeChildren = 'off';
 
             if nargout == 0
                 clear app
@@ -822,7 +861,7 @@ classdef data_visualizer < matlab.apps.AppBase
         function delete(app)
 
             % Delete UIFigure when app is deleted
-            delete(app.MRacing2024DataVisualizerUIFigure)
+            delete(app.MRacingDDT)
         end
     end
 end
