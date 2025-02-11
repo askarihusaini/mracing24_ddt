@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v1.0.1+';
-        PRIVATE_VER = 'dev-25.02.07.4';
+        PRIVATE_VER = 'dev-25.02.11.2';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -230,46 +230,48 @@ classdef data_visualizer < matlab.apps.AppBase
                     lapB_data_checkbox = lapB_data(:, checkbox_vars);
                     lapB_selected_data = lapB_data_checkbox{:, selected_vars}';
                 end
-
             end
+
+            % This is a useful domain to have
+            if size(lapA_x,1) > size(lapB_x,1)
+                full_x = lapA_x;
+            else
+                full_x = lapB_x;
+            end
+
+            plot_distance_variance = app.wrt_time && axis_values(2) == 1 && lapB;
 
             %% Variance
-            plot_variances = false; % get(app.variance_check, "Value");
-            if plot_variances && ~lapB
-                delete(msg)
-                msgbox("Error: Input a second lap to display variance", ...
-                        "Error")
-                return
-            end
-            if plot_variances && ~app.wrt_time
-                delete(msg)
-                msgbox("Error: Variance display only works when plotting w.r.t time", ...
-                        "Error")
-                return
-            end
-            % NOTE: The issue with variance when plotting w.r.t time is
-            % that there doesnt exist a function between distance and the
-            % variables. This is because the log data grabs values of each
-            % sensor ever 0.01 seconds, but this means the car can have the
-            % same distance value for multiple instances of time. As a
-            % result, we can't just subtract the two laps from eachother as
-            % their domains don't match (i.e. lap A will have the car at 5m
-            % for three logs, but lap B will have the car at 5m for four
-            % logs, so which values do we subtract?) In the future, this
-            % can probably be fixed by scrapping all log instances but one
-            % for each x value to make a function.
-
-            % Make both data ranges the same size so we can subtract them
-            if size(lapA_x,1) > size(lapB_x,1)
-                max_x = lapA_x;
-            else
-                max_x = lapB_x;
-            end
-            if plot_variances
-                variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
-                variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
-                variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
-            end
+            % plot_variances = get(app.variance_check, "Value");
+            % if plot_variances && ~lapB
+            %     delete(msg)
+            %     msgbox("Error: Input a second lap to display variance", ...
+            %             "Error")
+            %     return
+            % end
+            % if plot_variances && ~app.wrt_time
+            %     delete(msg)
+            %     msgbox("Error: Variance display only works when plotting w.r.t time", ...
+            %             "Error")
+            %     return
+            % end
+            % % NOTE: The issue with variance when plotting w.r.t time is
+            % % that there doesnt exist a function between distance and the
+            % % variables. This is because the log data grabs values of each
+            % % sensor ever 0.01 seconds, but this means the car can have the
+            % % same distance value for multiple instances of time. As a
+            % % result, we can't just subtract the two laps from eachother as
+            % % their domains don't match (i.e. lap A will have the car at 5m
+            % % for three logs, but lap B will have the car at 5m for four
+            % % logs, so which values do we subtract?) In the future, this
+            % % can probably be fixed by scrapping all log instances but one
+            % % for each x value to make a function.
+            %
+            % if plot_variances
+            %     variance_size = max(size(lapA_selected_data, 2), size(lapB_selected_data, 2));
+            %     variance_lapA = resize(lapA_selected_data, [NUM_VARS, variance_size], Pattern="edge"); % Is edge the best??? Or 0???
+            %     variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
+            % end
 
             %% Plot!
             set(findobj(msg,'Tag','MessageBox'),'String', 'Generating figure...')
@@ -280,6 +282,7 @@ classdef data_visualizer < matlab.apps.AppBase
             outlineColor = [0,0,0];
             lapAColor = [235/255, 52/255, 52/255];
             lapBColor = [52/255, 128/255, 235/255];
+            varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
             % Vertical line color defined in below function
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
@@ -334,10 +337,14 @@ classdef data_visualizer < matlab.apps.AppBase
                 % Add to plot_axes so we can link them all after the fact
                 plot_axes(i) = ax;
 
-                if plot_variances
+                % If this iteration is plotting distance w.r.t time between 2 laps...
+                if selected_vars(i) == 2 && plot_distance_variance
                     ax = nexttile(t1);
-                    
-                    plot(ax, max_x, variance_lapB(i,:) - variance_lapA(i,:), "Color", varianceColor);
+
+                    resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
+                    resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
+
+                    plot(ax, full_x, resized_lapB_dist(1,:) - resized_lapA_dist(1,:), "Color", varianceColor);
                     yline(ax, 0, "Color", ylineColor);
 
                     ax.XGrid = "on";
@@ -346,7 +353,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     ax.YMinorGrid = "on";
                     ax.Color = tileColor;
                     xticklabels(ax, "");
-                    ax.YLabel.String = "Variance";
+                    ax.YLabel.String = "Variance (m)";
 
                     % Same distance above and below horizontal axis
                     YL = get(ax, 'YLim');
@@ -354,10 +361,34 @@ classdef data_visualizer < matlab.apps.AppBase
                     set(ax, 'YLim', [-maxlim maxlim]);
 
                     % Similar for linking
-                    variance_axes(i) = ax;
+                    variance_axis = ax;
                 end
 
+                % if plot_variances
+                %     ax = nexttile(t1);
+                % 
+                %     plot(ax, full_x, variance_lapB(i,:) - variance_lapA(i,:), "Color", varianceColor);
+                %     yline(ax, 0, "Color", ylineColor);
+                % 
+                %     ax.XGrid = "on";
+                %     ax.YGrid = "on";
+                %     ax.XMinorGrid = "on";
+                %     ax.YMinorGrid = "on";
+                %     ax.Color = tileColor;
+                %     xticklabels(ax, "");
+                %     ax.YLabel.String = "Variance";
+                % 
+                %     % Same distance above and below horizontal axis
+                %     YL = get(ax, 'YLim');
+                %     maxlim = max(abs(YL));
+                %     set(ax, 'YLim', [-maxlim maxlim]);
+                % 
+                %     % Similar for linking
+                %     variance_axes(i) = ax
+                % end
+
             end
+
             xticklabels(ax, "auto"); % Enable tick labels for bottom graph
             ax.XTickLabelRotation = 45;
             if app.wrt_time
@@ -367,17 +398,23 @@ classdef data_visualizer < matlab.apps.AppBase
             end
 
             % Link all axes
-            if plot_variances
-                linkaxes([plot_axes, variance_axes], 'x')
+            if plot_distance_variance
+                linkaxes([plot_axes, variance_axis], 'x')
             else
                 linkaxes(plot_axes, 'x')
             end
+            % if plot_variances
+            %     linkaxes([plot_axes, variance_axes], 'x')
+            % else
+            %     linkaxes(plot_axes, 'x')
+            % end
 
             % Enable user input for each plot
             for i = 1:NUM_VARS
                 ax = plot_axes(i);
-                ax.ButtonDownFcn = @(src, event) handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
+                ax.ButtonDownFcn = @(src, event) handlePlotClick(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
             end
+
             
             % T2 Layout: Right hand side
             t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
@@ -438,15 +475,15 @@ classdef data_visualizer < matlab.apps.AppBase
             
             delete(msg)
 
-            f1.KeyPressFcn = @(src, event) UIFigureKeyPressFcn(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
+            f1.KeyPressFcn = @(src, event) UIFigureKeyPressFcn(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
         end
         
-        function handlePlotClick(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)           
+        function handlePlotClick(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)           
             % Get the click location
             clickPosition = event.IntersectionPoint;
             app.clickedX = clickPosition(1); % X-coordinate of the click
 
-            generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+            generateVLine(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
 
             % % Debugging Purposes
             % disp(['x = ', num2str(clickedX)]
@@ -460,18 +497,18 @@ classdef data_visualizer < matlab.apps.AppBase
             % end
         end
 
-        function UIFigureKeyPressFcn(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+        function UIFigureKeyPressFcn(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
             switch event.Key
                 case 'leftarrow'
                     try
                         app.clickedX = app.clickedX - app.arrowKeyIncrement;
-                        generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+                        generateVLine(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
                     catch
                     end
                 case 'rightarrow'
                     try
                         app.clickedX = app.clickedX + app.arrowKeyIncrement;
-                        generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+                        generateVLine(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
                     catch
                     end
                 otherwise
@@ -479,11 +516,11 @@ classdef data_visualizer < matlab.apps.AppBase
             end
         end
 
-        function generateVLine(app, event, max_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
+        function generateVLine(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
             vlineColor = [52/255, 235/255, 128/255];
 
             % Get domain index corresponding to the point clicked
-            [~, idx] = min(abs(max_x - app.clickedX));
+            [~, idx] = min(abs(full_x - app.clickedX));
             
             % Delete old vertical line (if it exists) and replace it
             try
