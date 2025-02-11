@@ -54,6 +54,7 @@ classdef data_visualizer < matlab.apps.AppBase
         arrowKeyIncrement = 1;
         clickedX
         vlines
+        PRECISION = 3; % Decimal places
         infoBox_data
         infoBox_text_1
         infoBox_text_2
@@ -441,7 +442,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     infoBox_string = "Lap " + i + ":\n@ x = " + 0 + "\n";
                 end
                 for j = 1:NUM_VARS
-                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
+                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + round(app.infoBox_data(i,j), app.PRECISION) + "\n";
                 end
                 infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
                 
@@ -547,7 +548,7 @@ classdef data_visualizer < matlab.apps.AppBase
                     infoBox_string = "Lap " + i + ":\n@ x = " + app.clickedX + "\n";
                 end
                 for j = 1:NUM_VARS
-                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + app.infoBox_data(i,j) + "\n";
+                   infoBox_string = infoBox_string + axis_names(selected_vars(j)) + ": " + round(app.infoBox_data(i,j), app.PRECISION) + "\n";
                 end
                 infoBox_string = regexprep(infoBox_string, "%", "%%"); % % is an escape character
                 
