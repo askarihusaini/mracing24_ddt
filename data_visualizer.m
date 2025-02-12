@@ -2,11 +2,12 @@ classdef data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v1.0.1+';
-        PRIVATE_VER = 'dev-25.02.11.3';
+        PUBLIC_VER = 'v1.1.0';
+        PRIVATE_VER = 'dev-25.02.11.4';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
+        export_data_check        matlab.ui.control.CheckBox
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
         time_button              matlab.ui.control.ToggleButton
@@ -101,8 +102,7 @@ classdef data_visualizer < matlab.apps.AppBase
 
 
                 % create new file with same name + ddt_
-                app.file = strcat("ddt_", app.file);
-                writetable(data, strcat(app.location, app.file));
+                writetable(data, strcat(app.location, replace(strcat("ddt_", app.file), ".txt", ".csv")));
             else
                 data = readtable([app.location, app.file]);
             end
@@ -118,6 +118,7 @@ classdef data_visualizer < matlab.apps.AppBase
             checkbox_vars = strrep(checkbox_vars, '/', '_');
             checkbox_vars = strrep(checkbox_vars, ' ', '');
             data_checkbox = data(:, checkbox_vars);
+            % There's a better way to do this using replace() lol
 
             %% Grab min & max lap and user inputted laps
             lap_min = data{1, "Dash_3_Lap_Number_None_"};
@@ -234,12 +235,14 @@ classdef data_visualizer < matlab.apps.AppBase
                 end
             end
 
-            % This is a useful domain to have
+            % This is useful when we need domains to be compatible
             if size(lapA_x,1) > size(lapB_x,1)
                 full_x = lapA_x;
             else
                 full_x = lapB_x;
             end
+            full_lapA_selected_data = resize(lapA_selected_data, [NUM_VARS, size(full_x,1)], Pattern="edge"); % Is edge the best??? Or 0???
+            full_lapB_selected_data = resize(lapB_selected_data, [NUM_VARS, size(full_x,1)], Pattern="edge");
 
             plot_distance_variance = app.wrt_time && axis_values(2) == 1 && lapB;
 
@@ -275,6 +278,64 @@ classdef data_visualizer < matlab.apps.AppBase
             %     variance_lapB = resize(lapB_selected_data, [NUM_VARS, variance_size], Pattern="edge");
             % end
 
+            %% Exporting Visualized Data
+            % full_x, lapA_selected_data, lapB_selected_data
+
+            if get(app.export_data_check, 'Value') == 1
+                if lapB
+                    exported_data = cat(2, full_x, full_lapA_selected_data', full_lapB_selected_data');
+                else
+                    exported_data = cat(2, full_x, full_lapA_selected_data');
+                end
+    
+                % Duplicate columns for two laps
+                if lapB
+                    VariableNames = {'Time (s)', axis_names{selected_vars}, axis_names{selected_vars}};
+                else
+                    VariableNames = {'Time (s)', axis_names{selected_vars}};
+                end
+    
+                % If we need to actually denote which lap the data comes from
+                if lapA
+                    for i = 2:NUM_VARS+1
+                        VariableNames{i} = strcat('Lap', num2str(lapA), '_', VariableNames{i});
+                        if lapB
+                            VariableNames{i+NUM_VARS} = strcat('Lap', num2str(lapB), '_', VariableNames{i+NUM_VARS});
+                        end
+                    end
+                end
+                if ~app.wrt_time
+                    VariableNames{1} = 'Distance (m)';
+                end
+                exported_table = array2table(exported_data, 'VariableNames', VariableNames);
+
+                % Make it named nicely (???? lol kinda nice but ugly)
+                exported_file = strcat("vizdata_", app.file);
+                exported_file = replace(exported_file, {'.txt', '.csv'}, {'', ''});
+
+                if app.wrt_time
+                    exported_file = strcat(exported_file, "wrttime_");
+                else
+                    exported_file = strcat(exported_file, "wrtdist_");
+                end
+
+                if lapB
+                    exported_file = strcat(exported_file, "_lap", num2str(lapA), "_lap", num2str(lapB));
+                elseif lapA
+                    exported_file = strcat(exported_file, "_lap", num2str(lapA));
+                else
+                    exported_file = strcat(exported_file, "_full");
+                end
+
+                exported_file = strcat(exported_file, "_", axis_names{selected_vars}, ".csv");
+                exported_file = eraseBetween(exported_file, '(', ')');
+                exported_file = replace(exported_file, {' ', '(', ')'}, {'', '', '_'});
+
+                % Write it
+                writetable(exported_table, strcat(app.location, exported_file));
+
+            end
+            
             %% Plot!
             set(findobj(msg,'Tag','MessageBox'),'String', 'Generating figure...')
 
@@ -343,10 +404,10 @@ classdef data_visualizer < matlab.apps.AppBase
                 if selected_vars(i) == 2 && plot_distance_variance
                     ax = nexttile(t1);
 
-                    resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
-                    resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
+                    % resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
+                    % resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
 
-                    plot(ax, full_x, resized_lapB_dist(1,:) - resized_lapA_dist(1,:), "Color", varianceColor);
+                    plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor);
                     yline(ax, 0, "Color", ylineColor);
 
                     ax.XGrid = "on";
@@ -501,7 +562,7 @@ classdef data_visualizer < matlab.apps.AppBase
 
         function UIFigureKeyPressFcn(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes)
             try
-                disp(event.Key)
+                % disp(event.Key) % Debugging
                 switch event.Key
                     case 'leftarrow'
                         app.clickedX = app.clickedX - app.arrowKeyIncrement;
@@ -565,7 +626,7 @@ classdef data_visualizer < matlab.apps.AppBase
         % Button pushed function: upload_log_button
         function upload_file(app, event)
             dummy = figure('Renderer', 'painters', 'Position', [-100 -100 0 0]); % create a dummy figure so that uigetfile doesn't minimize our GUI
-            [f, l] = uigetfile('*.txt', "Select log file");
+            [f, l] = uigetfile({'*.csv;*.txt'}, "Select log file");
             delete(dummy); % delete the dummy figure
             if isequal(f, 0)
                 return
@@ -858,6 +919,11 @@ classdef data_visualizer < matlab.apps.AppBase
             app.distance_button = uitogglebutton(app.plot_wrt_group);
             app.distance_button.Text = 'distance';
             app.distance_button.Position = [11 10 100 23];
+
+            % Create export_data_check
+            app.export_data_check = uicheckbox(app.MRacingDDT);
+            app.export_data_check.Text = 'Export Data';
+            app.export_data_check.Position = [152 24 85 22];
 
             % Create miguel_quote
             app.miguel_quote = uilabel(app.MRacingDDT);

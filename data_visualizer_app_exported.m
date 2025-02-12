@@ -3,6 +3,7 @@ classdef data_visualizer_app_exported < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         MRacing2024DataVisualizerUIFigure  matlab.ui.Figure
+        export_data_check        matlab.ui.control.CheckBox
         miguel_quote             matlab.ui.control.Label
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
@@ -499,6 +500,11 @@ classdef data_visualizer_app_exported < matlab.apps.AppBase
             app.miguel_quote.FontColor = [0.502 0.502 0.502];
             app.miguel_quote.Position = [336 20 124 30];
             app.miguel_quote.Text = {'" This makes me nut "'; 'Miguel Bigott -'};
+
+            % Create export_data_check
+            app.export_data_check = uicheckbox(app.MRacing2024DataVisualizerUIFigure);
+            app.export_data_check.Text = 'Export Data';
+            app.export_data_check.Position = [152 24 85 22];
 
             % Show the figure after all components are created
             app.MRacing2024DataVisualizerUIFigure.Visible = 'on';
