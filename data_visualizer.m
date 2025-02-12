@@ -3,7 +3,7 @@ classdef data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v1.1.0';
-        PRIVATE_VER = 'dev-25.02.11.4';
+        PRIVATE_VER = 'dev-25.02.11.5';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
