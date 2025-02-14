@@ -1,29 +1,29 @@
-MRacing Suspension Driver Data Feedback Tool
-v1.1.0 dev-25.02.11.5
+# MRacing Driver Data Feedback Tool  
+*v1.1.0 dev-25.02.11.5*  
 
-HOW TO USE:
+## **Instructions**  
+Download and unzip **"MRacing_DDT.zip"** into a folder.  
 
-Download and unzip "MRacing_DDT.zip" into a folder
-1) Open data_visualizer.m in MATLAB and run the script
-2) Upload a log file to be visualized
-    - NOTE: As of right now, only log data from MR23 works. Once MR25 exists, the app will be updated
-    - If the log file begins with ddt_, no need to reformat the file
-    - Otherwise, check the "Reformat File" button so it loads faster next time
-4) (Optional) Select a specific lap(s) (Lap A & B) to be visualized
-5) Select which variables to be visualized
-6) Select what the domain should be (time or distance traveled)
-7) (Optional) Select if you want to export the visualized data to a .csv file
-    - NOTE: This exported file cannot be used by the visualizezr, it is solely for human use
+1) Open `data_visualizer.m` in MATLAB and run the script.  
+2) Upload a log file to be visualized.  
+	- **Note:** Currently, only MR23 log data works. The app will be updated for MR25 once the car exists :)  
+	- If the log file begins with `ddt_`, no reformatting is needed.  
+	- Otherwise, check the **"Reformat File"** button to enable faster loading next time.  
+3) *(Optional)* Select specific lap(s) (Lap A and/or B) to visualize.  
+4) Choose the variables to visualize.  
+5) Select the domain (time or distance traveled).  
+6) *(Optional)* Export the visualized data to a `.csv` file.  
+   - **Note:** Exported files **cannot** be used by the visualizer. They are solely for human readability.  
 
-Interactions
-- Use the hand symbol to drag around inside any plot
-- Use the magnifying glasses to zoom in/out on the data
-- Click anywhere on a (non variance) plot to activate the info readout (top right)
-    - Use the arrow keys to scrub through the data more finely
-    - Use the , and . keys to scrub through even finer
+## **Interactions**  
+- 🖐️ **Drag**: Use the hand symbol to move around within any plot.  
+- 🔍 **Zoom**: Use the magnifying glass icons to zoom in/out.  
+- 📍 **Click Interaction**: Click anywhere on a **non-variance plot** to activate the info readout (top right).  
+	- Use **arrow keys** to scrub through the data more precisely.  
+	- Use **`,` (comma) and `.` (period)** for even finer adjustments.  
 
-All source code can be found by clicking the "Github Repo" link in the top right
-For any inquiries, DM me on slack :)
-
-If you want to mess around with some of the log data I used for testing, they can be found here:
-https://drive.google.com/file/d/1r3SQX5aWtWhb_4NIApD_iwJtWHasq-9m/view?usp=sharing
+## **Resources**  
+📂 **Source Code:** [GitHub Repo](https://github.com/askarihusaini/mracing24_ddt) (or click "Github Repo" in the top right of the app).  
+📝 **Changelog:** [CHANGELOG.md](https://github.com/askarihusaini/mracing24_ddt/blob/master/CHANGELOG.md).  
+📨 **Questions?** DM me on Slack :D 
+📊 **Sample MR23 Log Data:** [Download Here](https://drive.google.com/file/d/1r3SQX5aWtWhb_4NIApD_iwJtWHasq-9m/view?usp=sharing).  
