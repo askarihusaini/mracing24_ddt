@@ -1,0 +1,33 @@
+data_lap_number = P.Lap_Number_Dashboard_3;
+data_lap_time = P.Lap_Time_Dashboard_3;
+data_speed = P.Vehicle_Speed_Dashboard_3;
+data_rpm = P.L_D2_Motor_Speed_L_M165_Motor_Position_Info;
+data_brake = P.F_Brake_Pressure_Front_Module_P_1;
+data_throttle = P.APS_B_Front_Module_P_1;
+data_latg = P.Acceleration_X_Axis_Acceleration;
+data_longg = P.Acceleration_Y_Axis_Acceleration;
+data_zg = P.Acceleration_Z_Axis_Acceleration;
+data_time = P.xtime;
+
+data_lap_number = P.Dashboard_3_Lap_Number_None_;
+data_lap_time = P.Dashboard_3_Lap_Time_s_;
+data_speed = P.Dashboard_3_Vehicle_Speed_mph_;
+data_rpm = P.R_M165_Motor_Position_Info_R_D2_Motor_Speed_rpm_;
+data_brake = P.Front_Module_P_1_F_Brake_Pressure_psi_;
+data_throttle = P.Front_Module_P_1_APS_B_percent_;
+data_latg = P.Acceleration_Acceleration_X_Axis_g_;
+data_longg = P.Acceleration_Acceleration_Y_Axis_g_;
+data_zg = P.Acceleration_Acceleration_Z_Axis_g_;
+data_time = P.xtime_s_;
+
+"Dash_3_Lap_Number_None_")
+                     find(string(P.Properties.VariableNames) == "Dash_3_Lap_Time_s_")
+                     find(string(P.Properties.VariableNames) == "Dash_3_Vehicle_Speed_mph_")
+                     find(string(P.Properties.VariableNames) == "AMK_ActVal_1_RR_AMK_ActualVelocity_rpm_")
+                     find(string(P.Properties.VariableNames) == "Pedals_F_Brake_psi_")
+                     find(string(P.Properties.VariableNames) == "Pedals_APS_B_percent_")
+                     find(string(P.Properties.VariableNames) == "Average_IMU_Lat_g_")
+                     find(string(P.Properties.VariableNames) == "Average_IMU_Long_g_")
+                     find(string(P.Properties.VariableNames) == "Average_IMU_Vert_g_")
+                     find(string(P.Properties.VariableNames) == "xtime_s_")
+                     find(string(P.Properties.VariableNames) == "Average_IMU_Yaw_deg_s_"

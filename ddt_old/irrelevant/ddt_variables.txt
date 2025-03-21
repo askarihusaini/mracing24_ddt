@@ -1,2 +1,0 @@
-Lap_Number,Lap_Time,Speed,RPM,Brake,Latg,Longg,Zg,xTime,Yaw
-Dash_3_Lap_Number_None_,Dash_3_Lap_Time_s_,Dash_3_Vehicle_Speed_mph_,AMK_ActVal_1_RR_AMK_ActualVelocity_rpm_,Pedals_F_Brake_psi_,Pedals_APS_B_percent_,Average_IMU_Lat_g_,Average_IMU_Long_g_,Average_IMU_Vert_g_,xtime_s_,Average_IMU_Yaw_deg_s_
