@@ -2,7 +2,28 @@
 
 All notable changes to this project will be documented in this file.  
 
-## v1.1.0 (dev-25.02.11.5)
+## v2.0.0
+*(dev-25.03.25.2)*
+**Added**
+- DDT functional for MR24 data
+
+**Changed**
+- Reorganized resource files for mr23 and mr24 DDTs to keep them separate
+
+---
+
+## v1.2.0
+*(dev-25.03.21.1)*
+**Added**
+- Split DDT into MR23 and MR24 versions
+
+**Changed**
+- MR23 DDT will remain relatively unchanged going forwards, rendering it more as a legacy version
+
+---
+
+## v1.1.0
+*(dev-25.02.11.5)*
 **Added**
 - Arrow key functionality for infobox readout
 - Exporting visualized data
@@ -13,13 +34,15 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## v1.0.1 (dev-25.02.04.1)
+## v1.0.1
+*dev-25.02.04.1*  
 **Fixed**
-- Bug with infobox readout 
+- Fixed bug with infobox readout 
 - Improved appearance of vline
 
 ---
 
-## v1.0.0 (dev-25.02.04.1)
+## v1.0.0
+*dev-25.02.04.1*  
 **Added**
-- Initial release!!!
+- Initial release of the DDT.

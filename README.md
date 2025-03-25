@@ -1,12 +1,12 @@
 # MRacing Driver Data Feedback Tool  
-*v1.1.0 dev-25.02.11.5*  
+*v2.0.0 dev-25.03.25.2*  
 
 ## **Instructions**  
 Download and unzip **"MRacing_DDT.zip"** into a folder.  
 
-1) Open `data_visualizer.m` in MATLAB and run the script.  
+1) Open `mrXX_data_visualizer.m` in MATLAB and run the script.  
+	- MR23 data and MR24 data can be used with their respective scripts
 2) Upload a log file to be visualized.  
-	- **Note:** Currently, only MR23 log data works. The app will be updated for MR25 once the car exists :)  
 	- If the log file begins with `ddt_`, no reformatting is needed.  
 	- Otherwise, check the **"Reformat File"** button to enable faster loading next time.  
 3) *(Optional)* Select specific lap(s) (Lap A and/or B) to visualize.  
@@ -24,6 +24,5 @@ Download and unzip **"MRacing_DDT.zip"** into a folder.
 
 ## **Resources**  
 📂 **Source Code:** [GitHub Repo](https://github.com/askarihusaini/mracing24_ddt) (or click "Github Repo" in the top right of the app).  
-📝 **Changelog:** [CHANGELOG.md](https://github.com/askarihusaini/mracing24_ddt/blob/master/CHANGELOG.md).  
-📨 **Questions?** DM me on Slack :D 
-📊 **Sample MR23 Log Data:** [Download Here](https://drive.google.com/file/d/1r3SQX5aWtWhb_4NIApD_iwJtWHasq-9m/view?usp=sharing).  
+📝 **Changelog:** [CHANGELOG.md](https://github.com/askarihusaini/mracing24_ddt/blob/master/CHANGELOG.md).
+📨 **Questions?** DM me on Slack :D
