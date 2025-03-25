@@ -35,7 +35,7 @@ All notable changes to this project will be documented in this file.
 ---
 
 ## v1.0.1
-*dev-25.02.04.1*  
+*dev-25.02.04.1*
 **Fixed**
 - Fixed bug with infobox readout 
 - Improved appearance of vline
@@ -43,6 +43,6 @@ All notable changes to this project will be documented in this file.
 ---
 
 ## v1.0.0
-*dev-25.02.04.1*  
+*dev-25.02.04.1*
 **Added**
 - Initial release of the DDT.
