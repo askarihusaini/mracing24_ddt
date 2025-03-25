@@ -2,7 +2,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v2.0.0+';
+        PUBLIC_VER = 'v2.0.0';
         PRIVATE_VER = 'dev-25.03.25.2';
        
         MRacingDDT               matlab.ui.Figure
