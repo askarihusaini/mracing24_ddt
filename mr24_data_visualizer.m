@@ -2,8 +2,8 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v1.1.0+';
-        PRIVATE_VER = 'dev-25.03.18.1';
+        PUBLIC_VER = 'v2.0.0+';
+        PRIVATE_VER = 'dev-25.03.25.2';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -11,10 +11,8 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
         time_button              matlab.ui.control.ToggleButton
+        %tire_temp_check          matlab.ui.control.CheckBox
         yaw_rate_check           matlab.ui.control.CheckBox
-        pitch_rate_check         matlab.ui.control.CheckBox
-        roll_rate_check          matlab.ui.control.CheckBox
-        vert_gs_check            matlab.ui.control.CheckBox
         lat_gs_check             matlab.ui.control.CheckBox
         long_gs_check            matlab.ui.control.CheckBox
         brake_bias_check         matlab.ui.control.CheckBox
@@ -48,7 +46,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
     
     properties (Access = private)
-        NUM_CHECKBOXES = 18;
+        NUM_CHECKBOXES = 15;
         file = "";
         location = "";
         wrt_time
@@ -68,6 +66,9 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
         % Button pushed function: run_visualizer_button
         function run_visualizer(app, event)
+            
+            pathToMLAPP = fileparts(mfilename('fullpath'));
+
             % No file submitted lol
             if app.file == ""
                 msgbox("Error: No file uploaded... how did you mess that up bro", ...
@@ -82,7 +83,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             if get(app.reformat_file_check, 'Value') == 1
                 % These are the variables we want to keep in the reformatted file
                 % Make sure 'variables_select' has no carriage returns (\r)!!!!
-                relevant_vars = fileread('mr24_app_resources/variables_relevant.txt');
+                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr24_app_resources', 'variables_relevant.txt'));
                 relevant_vars = strsplit(relevant_vars, '\n');
 
                 % readtable replaces [ ] / with _ and removes whitespace
@@ -111,7 +112,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             % This is important because of how we index through the
             % checkbox variables
             % Again, MAKE SURE NO \r!!! Only \n!!!!
-            checkbox_vars = fileread('mr24_app_resources/variables_checkbox.txt');
+            checkbox_vars = fileread(fullfile(pathToMLAPP, 'mr24_app_resources', 'variables_checkbox.txt'));
             checkbox_vars = strsplit(checkbox_vars, '\n');
             checkbox_vars = strrep(checkbox_vars, '[', '_');
             checkbox_vars = strrep(checkbox_vars, ']', '_');
@@ -135,8 +136,8 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             end
 
             % Error message if segmentation fault
-            if (lapA < lap_min || lapA > lap_max || ...
-                    (lapB < lap_min && lapB ~= -1) || lapB > lap_max)
+            if ((lapA < lap_min && lapA ~= false) || lapA > lap_max || ...
+                    (lapB < lap_min && lapB ~= false) || lapB > lap_max)
                 delete(msg)
                 msgbox(["Error: Lap number out of bounds", ...
                         "Lap number must be between " + lap_min + " and " + lap_max], ...
@@ -151,8 +152,8 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                     app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
                     app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
                     app.vehicle_speed_check, app.brake_bias_check, ...
-                    app.long_gs_check, app.lat_gs_check, app.vert_gs_check, ...
-                    app.roll_rate_check, app.pitch_rate_check, app.yaw_rate_check];
+                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check];%, ...
+                    %app.tire_temp_check];
 
             % Vector of each variable's data/name
             axis_names = string(size(axis_checkboxes));
@@ -167,7 +168,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             end
 
             % Write axis_values to checkbox_memory.txt
-            save('mr24_app_resources/checkbox_states.mat', "axis_values");
+            save(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), "axis_values");
 
             % Checkbox variables filtered to only those selected
             selected_vars = 1:size(axis_checkboxes, 2);
@@ -520,8 +521,8 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             % T2B: GG Diagram
             ax = nexttile(t2, 2, [1,1]);
 
-            lat_g = data_checkbox{:, "Average_IMU_Lat_g_"};
-            long_g = data_checkbox{:, "Average_IMU_Long_g_"};
+            lat_g = data_checkbox{:, "Vehicle_Inertial_Lat_g_"};
+            long_g = data_checkbox{:, "Vehicle_Inertial_Lon_g_"};
             throttle_pos = data_checkbox{:, "Pedals_APS_A_percent_"};
 
             scatter(ax, lat_g, long_g, 20, throttle_pos, "Marker",".")
@@ -644,16 +645,16 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
         % Create UIFigure and components
         function createComponents(app)
 
-            if isfile('mr24_app_resources/checkbox_states.mat') % Check if file exists
-                loadedData = load('mr24_app_resources/checkbox_states.mat', 'axis_values'); % Load data
+            pathToMLAPP = fileparts(mfilename('fullpath'));
+
+            if isfile(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat')) % Check if file exists
+                loadedData = load(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), 'axis_values'); % Load data
                 checkbox_states = loadedData.axis_values; % Extract the variable
             else
-                checkbox_states = zeros(1, 18); % Default state if no file exists
+                axis_values = zeros(1, app.NUM_CHECKBOXES); % Default state if no file exists
+                save(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), "axis_values");
+                checkbox_states = axis_values; % "Extract" the variable (its all just zeroes)
             end
-
-
-            % Get the file path for locating images
-            pathToMLAPP = fileparts(mfilename('fullpath'));
 
             % Create MRacingDDT and hide until all components are created
             app.MRacingDDT = uifigure('Visible', 'off');
@@ -876,33 +877,19 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             app.lat_gs_check.Position = [25 265 83 22];
             app.lat_gs_check.Value = checkbox_states(14);
 
-            % Create vert_gs_check
-            app.vert_gs_check = uicheckbox(app.MRacingDDT);
-            app.vert_gs_check.Text = 'Vertical Gs (g)';
-            app.vert_gs_check.FontSize = 10;
-            app.vert_gs_check.Position = [25 244 85 22];
-            app.vert_gs_check.Value = checkbox_states(15);
-
-            % Create roll_rate_check
-            app.roll_rate_check = uicheckbox(app.MRacingDDT);
-            app.roll_rate_check.Text = 'Roll Rate (deg/s)';
-            app.roll_rate_check.FontSize = 10;
-            app.roll_rate_check.Position = [180 286 97 22];
-            app.roll_rate_check.Value = checkbox_states(16);
-
-            % Create pitch_rate_check
-            app.pitch_rate_check = uicheckbox(app.MRacingDDT);
-            app.pitch_rate_check.Text = 'Pitch Rate (deg/s)';
-            app.pitch_rate_check.FontSize = 10;
-            app.pitch_rate_check.Position = [180 265 102 22];
-            app.pitch_rate_check.Value = checkbox_states(17);
-
             % Create yaw_rate_check
             app.yaw_rate_check = uicheckbox(app.MRacingDDT);
             app.yaw_rate_check.Text = 'Yaw Rate (deg/s)';
             app.yaw_rate_check.FontSize = 10;
-            app.yaw_rate_check.Position = [180 244 99 22];
-            app.yaw_rate_check.Value = checkbox_states(18);
+            app.yaw_rate_check.Position = [25 244 85 22];
+            app.yaw_rate_check.Value = checkbox_states(15);
+
+            % % Create tire_temp_check
+            % app.tire_temp_check = uicheckbox(app.MRacingDDT);
+            % app.tire_temp_check.Text = '! TODO ! Tire Temps (C)';
+            % app.tire_temp_check.FontSize = 10;
+            % app.tire_temp_check.Position = [180 286 200 22];
+            % app.tire_temp_check.Value = checkbox_states(16);
 
             % Create plot_wrt_group
             app.plot_wrt_group = uibuttongroup(app.MRacingDDT);

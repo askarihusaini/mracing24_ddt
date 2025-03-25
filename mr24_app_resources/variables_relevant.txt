@@ -12,9 +12,6 @@ Dash_3_Vehicle_Speed [mph]
 Dash_3_Lap_Time [s]
 Dash_3_Lap_Number [None]
 Dash_4_Brake_Bias [None]
-380 S_VNAV_Accel_X_Accel
-381 S_VNAV_Accel_Y_Accel
-382 S_VNAV_Accel_Z_Accel
-383 S_VNAV_Gyro_X_Gyro
-384 S_VNAV_Gyro_Y_Gyro
-385 S_VNAV_Gyro_Z_Gyro
+Vehicle_Inertial_Lon [g]
+Vehicle_Inertial_Lat [g]
+Vehicle_Inertial_Yaw [deg/s]
