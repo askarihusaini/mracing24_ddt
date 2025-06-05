@@ -11,7 +11,10 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
         time_button              matlab.ui.control.ToggleButton
-        %tire_temp_check          matlab.ui.control.CheckBox
+        rr_temp_check            matlab.ui.control.CheckBox
+        rl_temp_check            matlab.ui.control.CheckBox
+        fr_temp_check            matlab.ui.control.CheckBox
+        fl_temp_check            matlab.ui.control.CheckBox
         yaw_rate_check           matlab.ui.control.CheckBox
         lat_gs_check             matlab.ui.control.CheckBox
         long_gs_check            matlab.ui.control.CheckBox
@@ -46,7 +49,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
     
     properties (Access = private)
-        NUM_CHECKBOXES = 15;
+        NUM_CHECKBOXES = 19;
         file = "";
         location = "";
         wrt_time
@@ -90,10 +93,14 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                 relevant_vars = strrep(relevant_vars, '[', '_');
                 relevant_vars = strrep(relevant_vars, ']', '_');
                 relevant_vars = strrep(relevant_vars, '/', '_');
+                relevant_vars = strrep(relevant_vars, '°', '_');
                 relevant_vars = strrep(relevant_vars, ' ', '');
 
                 data = readtable([app.location, app.file]);
                 data = data(:,relevant_vars);
+
+                % Funky stuff for tire temps
+                
 
                 % Throttle and brake percentages arent actual percentages lol
                 throttle_max = max(data{:,"Pedals_APS_A_percent_"});
@@ -117,6 +124,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             checkbox_vars = strrep(checkbox_vars, '[', '_');
             checkbox_vars = strrep(checkbox_vars, ']', '_');
             checkbox_vars = strrep(checkbox_vars, '/', '_');
+            checkbox_vars = strrep(checkbox_vars, '°', '_');
             checkbox_vars = strrep(checkbox_vars, ' ', '');
             data_checkbox = data(:, checkbox_vars);
             % There's a better way to do this using replace() lol
@@ -145,15 +153,21 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                 return
             end
            
+            %% Tire temps
+            % Append 12 more columns in the data for tire temps calculated
+            % as averages of multiple channels for each tire. Then
+            % hopefully it'll just work with the rest of the code as long
+            % as i format stuff correctly ?!!!!
+
             %% Which variables to plot?
             
             % Needs to be in same order as in log file
-            axis_checkboxes = [ app.time_check, app.distance_check, ... 
+            axis_checkboxes = [app.time_check, app.distance_check, ... 
                     app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
                     app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
                     app.vehicle_speed_check, app.brake_bias_check, ...
-                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check];%, ...
-                    %app.tire_temp_check];
+                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check, ...
+                    app.fl_temp_check, app.fr_temp_check, app.rl_temp_check, app.rr_temp_check];
 
             % Vector of each variable's data/name
             axis_names = string(size(axis_checkboxes));
@@ -348,6 +362,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             lapBColor = [52/255, 128/255, 235/255];
             varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
+            lineWidth = 2;
             % Vertical line color defined in below function
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
@@ -370,14 +385,14 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             t1 = tiledlayout(T, "vertical", "TileSpacing", "compact", "Padding", "compact");
             t1.Layout.Tile = 1;
             t1.Layout.TileSpan = [1,2];
-            
+
             % T1x: Individual graphs of variables
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
                 hold(ax, "on");
-                p1 = plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor);
+                p1 = plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor, 'LineWidth', lineWidth);
                 if lapB
-                    p2 = plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
+                    p2 = plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor, 'LineWidth', lineWidth);
                 end
                 hold(ax, "off");
                 yline(ax, 0, "Color", ylineColor);
@@ -408,7 +423,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                     % resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
                     % resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
 
-                    plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor);
+                    plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor, 'LineWidth', lineWidth);
                     yline(ax, 0, "Color", ylineColor);
 
                     ax.XGrid = "on";
@@ -478,7 +493,6 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                 ax = plot_axes(i);
                 ax.ButtonDownFcn = @(src, event) handlePlotClick(app, event, full_x, lapA_selected_data, lapB_selected_data, lapB, NUM_VARS, axis_names, selected_vars, plot_axes);
             end
-
             
             % T2 Layout: Right hand side
             t2 = tiledlayout(T, 2,1, "TileSpacing", "compact", "Padding", "none");
@@ -823,28 +837,28 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
             % Create fl_speed_check
             app.fl_speed_check = uicheckbox(app.MRacingDDT);
-            app.fl_speed_check.Text = 'FL Tyre Speed (rpm)';
+            app.fl_speed_check.Text = 'FL Tire Speed (rpm)';
             app.fl_speed_check.FontSize = 10;
             app.fl_speed_check.Position = [180 380 114 22];
             app.fl_speed_check.Value = checkbox_states(7);
 
             % Create fr_speed_check
             app.fr_speed_check = uicheckbox(app.MRacingDDT);
-            app.fr_speed_check.Text = 'FR Tyre Speed (rpm)';
+            app.fr_speed_check.Text = 'FR Tire Speed (rpm)';
             app.fr_speed_check.FontSize = 10;
             app.fr_speed_check.Position = [180 359 116 22];
             app.fr_speed_check.Value = checkbox_states(8);
 
             % Create rl_speed_check
             app.rl_speed_check = uicheckbox(app.MRacingDDT);
-            app.rl_speed_check.Text = 'RL Tyre Speed (rpm)';
+            app.rl_speed_check.Text = 'RL Tire Speed (rpm)';
             app.rl_speed_check.FontSize = 10;
             app.rl_speed_check.Position = [180 338 115 22];
             app.rl_speed_check.Value = checkbox_states(9);
 
             % Create rr_speed_check
             app.rr_speed_check = uicheckbox(app.MRacingDDT);
-            app.rr_speed_check.Text = 'RR Tyre Speed (rpm)';
+            app.rr_speed_check.Text = 'RR Tire Speed (rpm)';
             app.rr_speed_check.FontSize = 10;
             app.rr_speed_check.Position = [180 317 117 22];
             app.rr_speed_check.Value = checkbox_states(10);
@@ -881,20 +895,41 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             app.yaw_rate_check = uicheckbox(app.MRacingDDT);
             app.yaw_rate_check.Text = 'Yaw Rate (deg/s)';
             app.yaw_rate_check.FontSize = 10;
-            app.yaw_rate_check.Position = [25 244 85 22];
+            app.yaw_rate_check.Position = [25 244 100 22];
             app.yaw_rate_check.Value = checkbox_states(15);
 
-            % % Create tire_temp_check
-            % app.tire_temp_check = uicheckbox(app.MRacingDDT);
-            % app.tire_temp_check.Text = '! TODO ! Tire Temps (C)';
-            % app.tire_temp_check.FontSize = 10;
-            % app.tire_temp_check.Position = [180 286 200 22];
-            % app.tire_temp_check.Value = checkbox_states(16);
+            % Create fl_temp_check
+            app.fl_temp_check = uicheckbox(app.MRacingDDT);
+            app.fl_temp_check.Text = 'FL Tire Temp (°C)';
+            app.fl_temp_check.FontSize = 10;
+            app.fl_temp_check.Position = [180 286 114 22];
+            app.fl_temp_check.Value = checkbox_states(7);
+
+            % Create fr_temp_check
+            app.fr_temp_check = uicheckbox(app.MRacingDDT);
+            app.fr_temp_check.Text = 'FR Tire Temp (°C)';
+            app.fr_temp_check.FontSize = 10;
+            app.fr_temp_check.Position = [180 265 116 22];
+            app.fr_temp_check.Value = checkbox_states(8);
+
+            % Create rl_temp_check
+            app.rl_temp_check = uicheckbox(app.MRacingDDT);
+            app.rl_temp_check.Text = 'RL Tire Temp (°C)';
+            app.rl_temp_check.FontSize = 10;
+            app.rl_temp_check.Position = [180 244 115 22];
+            app.rl_temp_check.Value = checkbox_states(9);
+
+            % Create rr_temp_check
+            app.rr_temp_check = uicheckbox(app.MRacingDDT);
+            app.rr_temp_check.Text = 'RR Tire Temp (°C)';
+            app.rr_temp_check.FontSize = 10;
+            app.rr_temp_check.Position = [180 223 117 22];
+            app.rr_temp_check.Value = checkbox_states(10);
 
             % Create plot_wrt_group
             app.plot_wrt_group = uibuttongroup(app.MRacingDDT);
             app.plot_wrt_group.Title = 'Plot w.r.t';
-            app.plot_wrt_group.Position = [20 135 123 85];
+            app.plot_wrt_group.Position = [20 114 123 85];
 
             % Create time_button
             app.time_button = uitogglebutton(app.plot_wrt_group);

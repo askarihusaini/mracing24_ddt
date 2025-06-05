@@ -1,0 +1,11 @@
+timestamp
+Brake_Bias
+Distance_Traveled
+FL_CGSpeed
+FR_CGSPeed
+RL_CGSPeed
+RR_CGSpeed
+X_Accel
+Y_Accel
+Yaw
+vehicleSpeed_mph

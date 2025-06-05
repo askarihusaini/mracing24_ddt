@@ -347,6 +347,7 @@ classdef mr23_data_visualizer < matlab.apps.AppBase
             lapBColor = [52/255, 128/255, 235/255];
             varianceColor = [128/255, 52/255, 235/255];
             ylineColor = [.5,.5,.5];
+            LW = 1.5;
             % Vertical line color defined in below function
             set(groot,{'DefaultAxesXColor','DefaultAxesYColor','DefaultAxesZColor'},{outlineColor,outlineColor,outlineColor})
             
@@ -374,9 +375,9 @@ classdef mr23_data_visualizer < matlab.apps.AppBase
             for i = 1:NUM_VARS
                 ax = nexttile(t1);
                 hold(ax, "on");
-                p1 = plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor);
+                p1 = plot(ax, lapA_x, lapA_selected_data(i,:), "Color", lapAColor, 'LineWidth', LW);
                 if lapB
-                    p2 = plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor);
+                    p2 = plot(ax, lapB_x, lapB_selected_data(i,:), "Color", lapBColor, 'LineWidth', LW);
                 end
                 hold(ax, "off");
                 yline(ax, 0, "Color", ylineColor);
@@ -396,6 +397,8 @@ classdef mr23_data_visualizer < matlab.apps.AppBase
                 ax.Color = tileColor;
                 xticklabels(ax, "");
                 ax.YLabel.String = axis_names(selected_vars(i));
+
+                set(ax, 'XLim', [0, 45.8]);
             
                 % Add to plot_axes so we can link them all after the fact
                 plot_axes(i) = ax;
@@ -407,7 +410,7 @@ classdef mr23_data_visualizer < matlab.apps.AppBase
                     % resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
                     % resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
 
-                    plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor);
+                    plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor, 'LineWidth', LW);
                     yline(ax, 0, "Color", ylineColor);
 
                     ax.XGrid = "on";
@@ -422,6 +425,8 @@ classdef mr23_data_visualizer < matlab.apps.AppBase
                     YL = get(ax, 'YLim');
                     maxlim = max(abs(YL));
                     set(ax, 'YLim', [-maxlim maxlim]);
+
+                    set(ax, 'XLim', [0, 45.8]);
 
                     % Similar for linking
                     variance_axis = ax;
