@@ -81,38 +81,49 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             w = warning ('off','all');
             msg = msgbox("Loading log data...", "Please wait :)");
 
-            %% Reformat file
-            if get(app.reformat_file_check, 'Value') == 1
-                % These are the variables we want to keep in the reformatted file
-                % Make sure 'variables_select' has no carriage returns (\r)!!!!
-                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_relevant.txt'));
-                relevant_vars = strsplit(relevant_vars, '\n');
+            % %% Reformat file
+            % if get(app.reformat_file_check, 'Value') == 1
+            %     % These are the variables we want to keep in the reformatted file
+            %     % Make sure 'variables_select' has no carriage returns (\r)!!!!
+            %     relevant_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_relevant.txt'));
+            %     relevant_vars = strsplit(relevant_vars, '\n');
+            % 
+            %     % readtable replaces [ ] / with _ and removes whitespace
+            %     relevant_vars = strrep(relevant_vars, '[', '_');
+            %     relevant_vars = strrep(relevant_vars, ']', '_');
+            %     relevant_vars = strrep(relevant_vars, '/', '_');
+            %     relevant_vars = strrep(relevant_vars, '°', '_');
+            %     relevant_vars = strrep(relevant_vars, ' ', '');
+            % 
+            %     data = readtable([app.location, app.file]);
+            %     data = data(:,relevant_vars);
+            % 
+            %     % Funky stuff for tire temps
+            % 
+            % 
+            %     % Throttle and brake percentages arent actual percentages lol
+            %     throttle_max = max(data{:,"Pedals_APS_A_percent_"});
+            %     brake_max = max(data{:,"Pedals_APS_B_percent_"});
+            %     data{:,"Pedals_APS_A_percent_"} = data{:,"Pedals_APS_A_percent_"} / throttle_max;
+            %     data{:,"Pedals_APS_B_percent_"} = data{:,"Pedals_APS_B_percent_"} / brake_max;
+            % 
+            % 
+            %     % create new file with same name + ddt_
+            %     writetable(data, strcat(app.location, replace(strcat("ddt_", app.file), ".txt", ".csv")));
+            % else
+            %     data = readtable([app.location, app.file]);
+            % end
 
-                % readtable replaces [ ] / with _ and removes whitespace
-                relevant_vars = strrep(relevant_vars, '[', '_');
-                relevant_vars = strrep(relevant_vars, ']', '_');
-                relevant_vars = strrep(relevant_vars, '/', '_');
-                relevant_vars = strrep(relevant_vars, '°', '_');
-                relevant_vars = strrep(relevant_vars, ' ', '');
+            %% Load .mat
+            load('C:\Users\askar\docs\MATLAB\mracing24_ddt\mr25_log_data\log_2025-06-01_0540_comp.mat', 'signal_names', 'signals', 'time');
+            data = array2table(signals, VariableNames=signal_names);
+            data.("elapsed_time") = time';
 
-                data = readtable([app.location, app.file]);
-                data = data(:,relevant_vars);
-
-                % Funky stuff for tire temps
-                
-
-                % Throttle and brake percentages arent actual percentages lol
-                throttle_max = max(data{:,"Pedals_APS_A_percent_"});
-                brake_max = max(data{:,"Pedals_APS_B_percent_"});
-                data{:,"Pedals_APS_A_percent_"} = data{:,"Pedals_APS_A_percent_"} / throttle_max;
-                data{:,"Pedals_APS_B_percent_"} = data{:,"Pedals_APS_B_percent_"} / brake_max;
-
-
-                % create new file with same name + ddt_
-                writetable(data, strcat(app.location, replace(strcat("ddt_", app.file), ".txt", ".csv")));
-            else
-                data = readtable([app.location, app.file]);
-            end
+            % Throttle and brake percentages arent actual percentages lol
+            throttle_max = max(data{:,"Pedals.APS_A"});
+            brake_max = max(data{:,"Pedals.APS_B"});
+            data{:,"Pedals.APS_A"} = data{:,"Pedals.APS_A"} / throttle_max;
+            data{:,"Pedals.APS_B"} = data{:,"Pedals.APS_B"} / brake_max;
 
             %% Grab the variable data of the checkbox ones
             % This is important because of how we index through the
@@ -129,8 +140,8 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             % There's a better way to do this using replace() lol
 
             %% Grab min & max lap and user inputted laps
-            lap_min = data{1, "Dash_3_Lap_Number_None_"};
-            lap_max = data{end, "Dash_3_Lap_Number_None_"};
+            lap_min = data{1, "Dash_3.Lap_Number"};
+            lap_max = data{end, "Dash_3.Lap_Number"};
             lapA = app.lapA_edit.Value;
             lapB = app.lapB_edit.Value;
 
@@ -161,11 +172,11 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             %% Which variables to plot?
             
             % Needs to be in same order as in log file
-            axis_checkboxes = [app.time_check, app.distance_check, ... 
-                    app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
-                    app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
-                    app.vehicle_speed_check, app.brake_bias_check, ...
-                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check];
+            axis_checkboxes = [app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
+                            app.vehicle_speed_check, app.brake_bias_check, ...
+                            app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
+                            app.lat_gs_check, app.long_gs_check, app.yaw_rate_check, app.yaw_deg_check, ...
+                            app.distance_check, app.time_check];
 
             % Vector of each variable's data/name
             axis_names = string(size(axis_checkboxes));
@@ -202,9 +213,9 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             % Grab data w.r.t. all laps if no lap inputted
             if lapA == false
                 if app.wrt_time
-                    lapA_x = data{:,"xtime_s_"};
+                    lapA_x = data{:,"elapsed_time"};
                 else
-                    lapA_x = data{:,"xdist_m_"};
+                    lapA_x = data{:,"Veh_Status.DistanceDriven"};
                 end
                 lapA_selected_data = data_checkbox{:, selected_vars}';
 
@@ -216,26 +227,26 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
                 end
 
                 % Normalize laps so time & distance always starts at 0
-                lapA_data{:,"xtime_s_"} = lapA_data{:,"xtime_s_"} - lapA_data{1,"xtime_s_"};
+                lapA_data{:,"elapsed_time"} = lapA_data{:,"elapsed_time"} - lapA_data{1,"elapsed_time"};
                 if lapB
-                    lapB_data{:,"xtime_s_"} = lapB_data{:,"xtime_s_"} - lapB_data{1,"xtime_s_"};
+                    lapB_data{:,"elapsed_time"} = lapB_data{:,"elapsed_time"} - lapB_data{1,"elapsed_time"};
                 end
 
-                lapA_data{:,"xdist_m_"} = lapA_data{:,"xdist_m_"} - lapA_data{1,"xdist_m_"};
+                lapA_data{:,"Veh_Status.DistanceDriven"} = lapA_data{:,"Veh_Status.DistanceDriven"} - lapA_data{1,"Veh_Status.DistanceDriven"};
                 if lapB
-                    lapB_data{:,"xdist_m_"} = lapB_data{:,"xdist_m_"} - lapB_data{1,"xdist_m_"};
+                    lapB_data{:,"Veh_Status.DistanceDriven"} = lapB_data{:,"Veh_Status.DistanceDriven"} - lapB_data{1,"Veh_Status.DistanceDriven"};
                 end
 
                 % New variable just for domain
                 if app.wrt_time
-                    lapA_x = lapA_data{:,"xtime_s_"};
+                    lapA_x = lapA_data{:,"elapsed_time"};
                     if lapB
-                        lapB_x = lapB_data{:,"xtime_s_"};
+                        lapB_x = lapB_data{:,"elapsed_time"};
                     end
                 else
-                    lapA_x = lapA_data{:,"xdist_m_"};
+                    lapA_x = lapA_data{:,"Veh_Status.DistanceDriven"};
                     if lapB
-                        lapB_x = lapB_data{:,"xdist_m_"};
+                        lapB_x = lapB_data{:,"Veh_Status.DistanceDriven"};
                     end
                 end
     
@@ -420,8 +431,8 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
                 if selected_vars(i) == 2 && plot_distance_variance
                     ax = nexttile(t1);
 
-                    % resized_lapA_dist = resize(lapA_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
-                    % resized_lapB_dist = resize(lapB_data{:,"xdist_m_"}', [1, size(full_x, 1)], Pattern="edge");
+                    % resized_lapA_dist = resize(lapA_data{:,"Veh_Status.DistanceDriven"}', [1, size(full_x, 1)], Pattern="edge"); % Is edge the best??? Or 0???
+                    % resized_lapB_dist = resize(lapB_data{:,"Veh_Status.DistanceDriven"}', [1, size(full_x, 1)], Pattern="edge");
 
                     plot(ax, full_x, full_lapB_selected_data(i,:) - full_lapA_selected_data(i,:), "Color", varianceColor, 'LineWidth', lineWidth);
                     yline(ax, 0, "Color", ylineColor);
@@ -536,9 +547,9 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             % T2B: GG Diagram
             ax = nexttile(t2, 2, [1,1]);
 
-            lat_g = data_checkbox{:, "Vehicle_Inertial_Lat_g_"};
-            long_g = data_checkbox{:, "Vehicle_Inertial_Lon_g_"};
-            throttle_pos = data_checkbox{:, "Pedals_APS_A_percent_"};
+            lat_g = data_checkbox{:, "VNAV_Accel_Corr.X_Corr"};
+            long_g = data_checkbox{:, "VNAV_Accel_Corr.Y_Corr"};
+            throttle_pos = data_checkbox{:, "Pedals.APS_A"};
 
             scatter(ax, lat_g, long_g, 20, throttle_pos, "Marker",".")
             ax.XGrid = "on";
@@ -642,7 +653,7 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
         % Button pushed function: upload_log_button
         function upload_file(app, event)
             dummy = figure('Renderer', 'painters', 'Position', [-100 -100 0 0]); % create a dummy figure so that uigetfile doesn't minimize our GUI
-            [f, l] = uigetfile({'*.csv;*.txt'}, "Select log file");
+            [f, l] = uigetfile({'*.mat;'}, "Select log file");
             delete(dummy); % delete the dummy figure
             if isequal(f, 0)
                 return
