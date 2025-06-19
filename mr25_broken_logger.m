@@ -1,9 +1,9 @@
-classdef mr25_temp_ddt < matlab.apps.AppBase
+classdef mr25_broken_logger < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v2.1.0';
-        PRIVATE_VER = 'dev-25.06.05';
+        PUBLIC_VER = 'v2.1.1';
+        PRIVATE_VER = 'dev-25.06.17';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -86,7 +86,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
             if get(app.reformat_file_check, 'Value') == 1
                 % These are the variables we want to keep in the reformatted file
                 % Make sure 'variables_select' has no carriage returns (\r)!!!!
-                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_relevant.txt'));
+                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'variables_relevant.txt'));
                 relevant_vars = strsplit(relevant_vars, '\n');
 
                 % readtable replaces [ ] / with _ and removes whitespace
@@ -110,7 +110,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
             % This is important because of how we index through the
             % checkbox variables
             % Again, MAKE SURE NO \r!!! Only \n!!!!
-            checkbox_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_checkbox.txt'));
+            checkbox_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'variables_checkbox.txt'));
             checkbox_vars = strsplit(checkbox_vars, '\n');
             checkbox_vars = strrep(checkbox_vars, '[', '_');
             checkbox_vars = strrep(checkbox_vars, ']', '_');
@@ -165,7 +165,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
             end
 
             % Write axis_values to checkbox_memory.txt
-            save(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), "axis_values");
+            save(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'checkbox_states.mat'), "axis_values");
 
             % Checkbox variables filtered to only those selected
             selected_vars = 1:size(axis_checkboxes, 2);
@@ -643,12 +643,12 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
 
             pathToMLAPP = fileparts(mfilename('fullpath'));
 
-            if isfile(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat')) % Check if file exists
-                loadedData = load(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), 'axis_values'); % Load data
+            if isfile(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'checkbox_states.mat')) % Check if file exists
+                loadedData = load(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'checkbox_states.mat'), 'axis_values'); % Load data
                 checkbox_states = loadedData.axis_values; % Extract the variable
             else
                 axis_values = zeros(1, app.NUM_CHECKBOXES); % Default state if no file exists
-                save(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), "axis_values");
+                save(fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'checkbox_states.mat'), "axis_values");
                 checkbox_states = axis_values; % "Extract" the variable (its all just zeroes)
             end
 
@@ -660,7 +660,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
             % Create Image
             app.Image = uiimage(app.MRacingDDT);
             app.Image.Position = [1 1 480 720];
-            app.Image.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources', 'background.png');
+            app.Image.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'background.png');
 
             % Create run_visualizer_button
             app.run_visualizer_button = uibutton(app.MRacingDDT, 'push');
@@ -675,7 +675,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
             % Create mracing_logo
             app.mracing_logo = uiimage(app.MRacingDDT);
             app.mracing_logo.Position = [20 620 300 80];
-            app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources', 'mracing_logo.png');
+            app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources_brokenlogger', 'mracing_logo.png');
 
             % Create ddvt_header
             app.ddvt_header = uilabel(app.MRacingDDT);
@@ -891,7 +891,7 @@ classdef mr25_temp_ddt < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = mr25_temp_ddt
+        function app = mr25_broken_logger
 
             % Create UIFigure and components
             createComponents(app)

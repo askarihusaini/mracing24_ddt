@@ -1,9 +1,9 @@
-classdef mr24_data_visualizer < matlab.apps.AppBase
+classdef mr25_data_visualizer < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
-        PUBLIC_VER = 'v2.0.0';
-        PRIVATE_VER = 'dev-25.03.25.2';
+        PUBLIC_VER = 'v2.2.0';
+        PRIVATE_VER = 'dev-25.06.17';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -11,10 +11,9 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
         plot_wrt_group           matlab.ui.container.ButtonGroup
         distance_button          matlab.ui.control.ToggleButton
         time_button              matlab.ui.control.ToggleButton
-        rr_temp_check            matlab.ui.control.CheckBox
-        rl_temp_check            matlab.ui.control.CheckBox
-        fr_temp_check            matlab.ui.control.CheckBox
-        fl_temp_check            matlab.ui.control.CheckBox
+        yaw_deg_check            matlab.ui.control.CheckBox
+        lat_pos_check            matlab.ui.control.CheckBox
+        long_pos_check           matlab.ui.control.CheckBox
         yaw_rate_check           matlab.ui.control.CheckBox
         lat_gs_check             matlab.ui.control.CheckBox
         long_gs_check            matlab.ui.control.CheckBox
@@ -49,7 +48,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
     
     properties (Access = private)
-        NUM_CHECKBOXES = 19;
+        NUM_CHECKBOXES = 16; % For checkbox_states.mat size
         file = "";
         location = "";
         wrt_time
@@ -86,7 +85,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             if get(app.reformat_file_check, 'Value') == 1
                 % These are the variables we want to keep in the reformatted file
                 % Make sure 'variables_select' has no carriage returns (\r)!!!!
-                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr24_app_resources', 'variables_relevant.txt'));
+                relevant_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_relevant.txt'));
                 relevant_vars = strsplit(relevant_vars, '\n');
 
                 % readtable replaces [ ] / with _ and removes whitespace
@@ -119,7 +118,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             % This is important because of how we index through the
             % checkbox variables
             % Again, MAKE SURE NO \r!!! Only \n!!!!
-            checkbox_vars = fileread(fullfile(pathToMLAPP, 'mr24_app_resources', 'variables_checkbox.txt'));
+            checkbox_vars = fileread(fullfile(pathToMLAPP, 'mr25_app_resources', 'variables_checkbox.txt'));
             checkbox_vars = strsplit(checkbox_vars, '\n');
             checkbox_vars = strrep(checkbox_vars, '[', '_');
             checkbox_vars = strrep(checkbox_vars, ']', '_');
@@ -166,8 +165,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
                     app.throttle_position_check, app.brake_position_check, app.front_brakes_check, app.read_brakes_check, ...
                     app.fl_speed_check, app.fr_speed_check, app.rl_speed_check, app.rr_speed_check, ...
                     app.vehicle_speed_check, app.brake_bias_check, ...
-                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check, ...
-                    app.fl_temp_check, app.fr_temp_check, app.rl_temp_check, app.rr_temp_check];
+                    app.long_gs_check, app.lat_gs_check, app.yaw_rate_check];
 
             % Vector of each variable's data/name
             axis_names = string(size(axis_checkboxes));
@@ -182,7 +180,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             end
 
             % Write axis_values to checkbox_memory.txt
-            save(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), "axis_values");
+            save(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), "axis_values");
 
             % Checkbox variables filtered to only those selected
             selected_vars = 1:size(axis_checkboxes, 2);
@@ -664,12 +662,12 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
 
             pathToMLAPP = fileparts(mfilename('fullpath'));
 
-            if isfile(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat')) % Check if file exists
-                loadedData = load(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), 'axis_values'); % Load data
+            if isfile(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat')) % Check if file exists
+                loadedData = load(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), 'axis_values'); % Load data
                 checkbox_states = loadedData.axis_values; % Extract the variable
             else
                 axis_values = zeros(1, app.NUM_CHECKBOXES); % Default state if no file exists
-                save(fullfile(pathToMLAPP, 'mr24_app_resources', 'checkbox_states.mat'), "axis_values");
+                save(fullfile(pathToMLAPP, 'mr25_app_resources', 'checkbox_states.mat'), "axis_values");
                 checkbox_states = axis_values; % "Extract" the variable (its all just zeroes)
             end
 
@@ -681,7 +679,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             % Create Image
             app.Image = uiimage(app.MRacingDDT);
             app.Image.Position = [1 1 480 720];
-            app.Image.ImageSource = fullfile(pathToMLAPP, 'mr24_app_resources', 'background.png');
+            app.Image.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources', 'background.png');
 
             % Create run_visualizer_button
             app.run_visualizer_button = uibutton(app.MRacingDDT, 'push');
@@ -696,7 +694,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             % Create mracing_logo
             app.mracing_logo = uiimage(app.MRacingDDT);
             app.mracing_logo.Position = [20 620 300 80];
-            app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'mr24_app_resources', 'mracing_logo.png');
+            app.mracing_logo.ImageSource = fullfile(pathToMLAPP, 'mr25_app_resources', 'mracing_logo.png');
 
             % Create ddvt_header
             app.ddvt_header = uilabel(app.MRacingDDT);
@@ -901,33 +899,12 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
             app.yaw_rate_check.Position = [25 244 100 22];
             app.yaw_rate_check.Value = checkbox_states(15);
 
-            % Create fl_temp_check
-            app.fl_temp_check = uicheckbox(app.MRacingDDT);
-            app.fl_temp_check.Text = 'FL Tire Temp (°C)';
-            app.fl_temp_check.FontSize = 10;
-            app.fl_temp_check.Position = [180 286 114 22];
-            app.fl_temp_check.Value = checkbox_states(7);
-
-            % Create fr_temp_check
-            app.fr_temp_check = uicheckbox(app.MRacingDDT);
-            app.fr_temp_check.Text = 'FR Tire Temp (°C)';
-            app.fr_temp_check.FontSize = 10;
-            app.fr_temp_check.Position = [180 265 116 22];
-            app.fr_temp_check.Value = checkbox_states(8);
-
-            % Create rl_temp_check
-            app.rl_temp_check = uicheckbox(app.MRacingDDT);
-            app.rl_temp_check.Text = 'RL Tire Temp (°C)';
-            app.rl_temp_check.FontSize = 10;
-            app.rl_temp_check.Position = [180 244 115 22];
-            app.rl_temp_check.Value = checkbox_states(9);
-
-            % Create rr_temp_check
-            app.rr_temp_check = uicheckbox(app.MRacingDDT);
-            app.rr_temp_check.Text = 'RR Tire Temp (°C)';
-            app.rr_temp_check.FontSize = 10;
-            app.rr_temp_check.Position = [180 223 117 22];
-            app.rr_temp_check.Value = checkbox_states(10);
+            % Create yaw_deg_check
+            app.yaw_deg_check = uicheckbox(app.MRacingDDT);
+            app.yaw_deg_check.Text = 'Yaw Position (deg)';
+            app.yaw_deg_check.FontSize = 10;
+            app.yaw_deg_check.Position = [25 223 115 22];
+            app.yaw_deg_check.Value = checkbox_states(16);
 
             % Create plot_wrt_group
             app.plot_wrt_group = uibuttongroup(app.MRacingDDT);
@@ -968,7 +945,7 @@ classdef mr24_data_visualizer < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = mr24_data_visualizer
+        function app = mr25_data_visualizer
 
             % Create UIFigure and components
             createComponents(app)
