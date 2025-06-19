@@ -3,7 +3,7 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         PUBLIC_VER = 'v2.2.0';
-        PRIVATE_VER = 'dev-25.06.17';
+        PRIVATE_VER = 'dev-25.06.19.2';
        
         MRacingDDT               matlab.ui.Figure
         miguel_quote             matlab.ui.control.Label
@@ -32,7 +32,6 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
         variables_header         matlab.ui.control.Label
         LapBLabel                matlab.ui.control.Label
         Lap1Label                matlab.ui.control.Label
-        reformat_file_check      matlab.ui.control.CheckBox
         lapB_edit                matlab.ui.control.NumericEditField
         lapA_edit                matlab.ui.control.NumericEditField
         file_label               matlab.ui.control.Label
@@ -775,12 +774,6 @@ classdef mr25_data_visualizer < matlab.apps.AppBase
             app.lapB_edit.Placeholder = 'Default ignore';
             app.lapB_edit.Position = [300 507 80 21];
             app.lapB_edit.Value = [];
-
-            % Create reformat_file_check
-            app.reformat_file_check = uicheckbox(app.MRacingDDT);
-            app.reformat_file_check.Text = 'Reformat file';
-            app.reformat_file_check.FontSize = 10;
-            app.reformat_file_check.Position = [25 460 80 25];
 
             % Create Lap1Label
             app.Lap1Label = uilabel(app.MRacingDDT);
